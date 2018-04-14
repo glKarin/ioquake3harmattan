@@ -1,0 +1,92 @@
+ioquake3-touch (1558-6-harmattan2015eva) unstable; urgency=low
+
+  * Virtual buttons's function don't depend settings any more.
+  * If you have N950 or external keyboard, you can change key binding and don't effect virtual buttons.
+  * Add "Walk" button.
+  * Press "Fire" key (default CTRL) with keyboard can auto aim.
+  * Change On-Screen Buttons layout.
+  * New color scheme of buttons above menu.
+
+ -- Karin Zhao <beyondk2000@gmail.com>  Wed, 29 Jul 2015 09:09:18 +0800
+
+ioquake3-touch (1558-6-harmattan2015diana) unstable; urgency=low
+
+  **********************************************************************************************************
+  **********************************************************************************************************
+  *                                                ADD                                                     *
+  **********************************************************************************************************
+  * Support Multi-Touch with XInput2, and support 10 points.                                               *
+  * On-Screen Buttons color feedback when pressed or released.                                             *
+  * Draw On-Screen Buttons on menu surface.                                                                *
+  **********************************************************************************************************
+  *                                              CHANGE                                                    *
+  **********************************************************************************************************
+  * Don't listen X11 mouse events, and listen XInput events.                                               *
+  * Ungrab mouse, so you can swipe screen to switcher.                                                     *
+  * About auto aim(bot aim), do aim bot when "FIRE" virtual buttons is pressed, others don't auto aim bot. *
+  **********************************************************************************************************
+
+ -- Karin Zhao <beyondk2000@gmail.com>  Sun, 19 Jul 2015 07:31:18 +0800
+
+ioquake3-touch (1558-6-harmattan2015carla) unstable; urgency=low
+
+  * Fixed post-install script.
+
+ -- Karin Zhao <beyondk2000@gmail.com>  Thu, 7 May 2015 06:44:16 +0800
+
+ioquake3-touch (1558-6-harmattan2015belle) unstable; urgency=low
+
+  * Fixed a bugs of on-screen-buttons.
+
+ -- Karin Zhao <beyondk2000@gmail.com>  Sun, 3 May 2015 17:19:46 +0800
+
+ioquake3-touch (1558-6-harmattan2015angeline) unstable; urgency=low
+
+  * HARMATTAN SUPPORTED: Add on-screen virtual buttons in game UI.
+  * HARMATTAN NOTE: Do not setup key map configs.
+  * HARMATTAN UNFINISHED: Fixed pointer has offset in menu UI.
+  * HARMATTAN UNFINISHED: Support multi-pointer event of on-screen virtual buttons with X11.
+
+ -- Karin Zhao <beyondk2000@gmail.com>  Fri, 1 May 2015 08:04:14 +0800
+
+ioquake3 (1558-maemo6) unstable; urgency=low
+
+  * Nokia: Experimental support relative motion events; allows binary QVM's.
+  * Makefile.local: Enabled interpreted QVM support...
+  * EGL: input: Moved the sensitivity calculation into the client code.
+  * EGL: input: Adjusted the player-has-jumped calculation.
+  * NOKIA: client: posnP[xy] are both unused variables.
+  * NOKIA: Enabled more aggressive optimization flags: -ffast-math -march=armv7-a -mcpu=cortex-a8 -mfpu=neon
+  * NOKIA: Allow loading of unknown BSP versions (e.g. for Quake Live)
+
+ -- Oliver McFadden <oliver.mcfadden@nokia.com>  Wed, 10 Mar 2010 09:03:14 +0200
+
+ioquake3 (1558-maemo5) unstable; urgency=low
+
+  * Don't die on a bad UI system call; need to debug this further...
+
+ -- Oliver McFadden <oliver.mcfadden@nokia.com>  Sun, 11 Oct 2009 17:13:02 +0300
+
+ioquake3 (1558-maemo4) unstable; urgency=low
+
+  * Base game must be "baseq3"
+
+ -- Oliver McFadden <oliver.mcfadden@nokia.com>  Sun, 11 Oct 2009 15:59:36 +0300
+
+ioquake3 (1558-maemo3) unstable; urgency=low
+
+  * Architecture should be armel, as x86 is not supported.
+
+ -- Oliver McFadden <oliver.mcfadden@nokia.com>  Sun, 11 Oct 2009 15:16:58 +0300
+
+ioquake3 (1558-maemo2) unstable; urgency=low
+
+  * Add the configuration files.
+
+ -- Oliver McFadden <oliver.mcfadden@nokia.com>  Sun, 11 Oct 2009 14:57:33 +0300
+
+ioquake3 (1558-maemo1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Oliver McFadden <oliver.mcfadden@nokia.com>  Sun, 11 Oct 2009 13:11:09 +0300

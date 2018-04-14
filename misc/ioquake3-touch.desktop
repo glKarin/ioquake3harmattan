@@ -1,0 +1,9 @@
+[Desktop Entry]
+Encoding=UTF-8
+#Version=0.1
+Type=Application
+Name=Quake III Arena
+Name[zh_CN]=雷神之锤3-竞技场
+Exec=/home/user/baseq3/quake3arena.sh
+Icon=/usr/share/icons/hicolor/80x80/apps/ioquake3-touch_80.png
+X-Osso-Type=application/x-executable

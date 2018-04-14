@@ -1,0 +1,7 @@
+build/release-linux-arm/baseq3/*.so	/usr/lib/ioquake3-touch
+#build/release-linux-arm/baseq3/vm/*.qvm	/home/user/baseq3
+build/release-linux-arm/ioquake3.arm	/usr/bin
+misc/ioquake3-touch_80.png	/usr/share/icons/hicolor/80x80/apps/
+misc/ioquake3-touch.desktop	/usr/share/applications
+misc/*.cfg	/usr/share/ioquake3-touch/misc
+misc/quake3arena.sh	/usr/share/ioquake3-touch/misc

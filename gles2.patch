@@ -1,0 +1,135 @@
+diff --git a/Makefile b/Makefile
+index feddc60..25bbbdd 100644
+--- a/Makefile
++++ b/Makefile
+@@ -312,8 +312,8 @@ ifeq ($(PLATFORM),linux)
+   THREAD_LIBS=-lpthread
+   LIBS=-ldl -lm
+ 
+-  BASE_CFLAGS += -I/usr/include/EGL/ -I/usr/include/GLES/
+-  CLIENT_LIBS=$(SDL_LIBS) -lGLES_CM -lX11
++  BASE_CFLAGS += -I/usr/include/EGL/ -I/usr/include/GLES2/
++  CLIENT_LIBS=$(SDL_LIBS) -lGLESv2 -lX11
+ 
+   ifeq ($(USE_OPENAL),1)
+     ifneq ($(USE_OPENAL_DLOPEN),1)
+diff --git a/code/egl/GenerateQGL.pl b/code/egl/GenerateQGL.pl
+index 6c1372b..f60e495 100755
+--- a/code/egl/GenerateQGL.pl
++++ b/code/egl/GenerateQGL.pl
+@@ -1,7 +1,7 @@
+ #!/usr/bin/perl
+ 
+ open(INPUT_FILE, ">/tmp/input-$$.h") || die "$!";
+-print INPUT_FILE "#import <GLES/gl.h>\n";
++print INPUT_FILE "#import <GLES2/gl2.h>\n";
+ close INPUT_FILE;
+ open(CPP, "/usr/bin/cpp /tmp/input-$$.h|") || die "$!";
+ 
+diff --git a/code/egl/egl_glimp.c b/code/egl/egl_glimp.c
+index 4783e89..63f4b58 100644
+--- a/code/egl/egl_glimp.c
++++ b/code/egl/egl_glimp.c
+@@ -8,8 +8,8 @@
+ #include <X11/Xlib.h>
+ #include <X11/Xutil.h>
+ 
+-#include <GLES/egl.h>
+-#include <GLES/gl.h>
++#include <EGL/egl.h>
++#include <GLES2/gl2.h>
+ 
+ #include "egl_glimp.h"
+ #include "../client/client.h"
+diff --git a/code/egl/egl_glimp.h b/code/egl/egl_glimp.h
+index 0febcb2..f965291 100644
+--- a/code/egl/egl_glimp.h
++++ b/code/egl/egl_glimp.h
+@@ -14,8 +14,8 @@
+ #include <X11/Xlib.h>
+ #include <X11/Xutil.h>
+ 
+-#include <GLES/egl.h>
+-#include <GLES/gl.h>
++#include <EGL/egl.h>
++#include <GLES2/gl2.h>
+ 
+ #include "egl_input.h"
+ 
+diff --git a/code/egl/egl_input.c b/code/egl/egl_input.c
+index e06665f..09f9028 100644
+--- a/code/egl/egl_input.c
++++ b/code/egl/egl_input.c
+@@ -11,8 +11,8 @@
+ #include <X11/Xlib.h>
+ #include <X11/Xutil.h>
+ 
+-#include <GLES/egl.h>
+-#include <GLES/gl.h>
++#include <EGL/egl.h>
++#include <GLES2/gl2.h>
+ 
+ #include "egl_glimp.h"
+ #include "../client/client.h"
+diff --git a/code/egl/egl_input.h b/code/egl/egl_input.h
+index e749732..0fb4630 100644
+--- a/code/egl/egl_input.h
++++ b/code/egl/egl_input.h
+@@ -14,8 +14,8 @@
+ #include <X11/Xlib.h>
+ #include <X11/Xutil.h>
+ 
+-#include <GLES/egl.h>
+-#include <GLES/gl.h>
++#include <EGL/egl.h>
++#include <GLES2/gl2.h>
+ 
+ #include "../qcommon/q_shared.h"
+ 
+diff --git a/code/renderer/qgl.h b/code/renderer/qgl.h
+index ced454c..116f8dd 100644
+--- a/code/renderer/qgl.h
++++ b/code/renderer/qgl.h
+@@ -47,8 +47,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ 
+ #elif defined( __linux__ )
+ 
+-#include <GLES/egl.h>
+-#include <GLES/gl.h>
++#include <EGL/egl.h>
++#include <GLES2/gl2.h>
+ 
+ #include "../egl/egl_glimp.h"
+ 
+diff --git a/debian/control b/debian/control
+index 232377a..5be8629 100644
+--- a/debian/control
++++ b/debian/control
+@@ -2,13 +2,13 @@ Source: ioquake3
+ Section: user/games
+ Priority: extra
+ Maintainer: Oliver McFadden <oliver.mcfadden@nokia.com>
+-Build-Depends: debhelper (>= 5), opengles-sgx-img-common-dev, libgles1-sgx-img-dev, perl, libsdl1.2-dev
++Build-Depends: debhelper (>= 5), opengles-sgx-img-common-dev, libgles2-sgx-img-dev, perl, libsdl1.2-dev
+ Standards-Version: 3.8.1
+ Homepage: http://ioquake3.org/
+ 
+ Package: ioquake3
+ Architecture: armel
+-Depends: opengles-sgx-img-common, libgles1-sgx-img, xserver-xomap, ${shlibs:Depends}, ${misc:Depends}
++Depends: opengles-sgx-img-common, libgles2-sgx-img, xserver-xomap, ${shlibs:Depends}, ${misc:Depends}
+ Description: Quake III Arena
+  Welcome to the Arena, where high-ranking warriors are transformed into
+  spineless mush. Abandoning every ounce of common sense and any trace of doubt,
+diff --git a/misc/quake3.desktop b/misc/quake3.desktop
+index a8be7e1..8b933aa 100644
+--- a/misc/quake3.desktop
++++ b/misc/quake3.desktop
+@@ -3,6 +3,6 @@ Encoding=UTF-8
+ Version=0.1
+ Type=Application
+ Name=Quake 3
+-Exec=/home/user/baseq3/q3.sh
++Exec=/home/user/baseq3/ioquake3.sh
+ Icon=quake3
+ X-Osso-Type=application/x-executable

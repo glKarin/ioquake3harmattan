@@ -1,0 +1,42 @@
+#!/bin/sh
+
+#define BEGIN
+set -e
+
+USER_DIR="/home/user/baseq3"
+LIBS_DIR="/usr/lib/ioquake3-touch"
+MISC_DIR="/usr/share/ioquake3-touch/misc"
+
+if [ "$1" = "configure" ]; then
+	# create user ioquake3 directory
+	if [ ! -d $USER_DIR ]; then
+		devel-su user -c "mkdir $USER_DIR"
+		echo "mkdir $USER_DIR"
+		if [ x$? != "x0" ]; then
+			echo "WARNNING -> Create ioquake3 directory for user failed! Exiting..."
+			exit 1;
+		fi
+	fi
+	# symbols link libraries to user ioquake3 directory
+	QLIBS=`ls $LIBS_DIR`
+	for libso in $QLIBS; do
+		if [ -e $USER_DIR/$libso ]; then
+			devel-su user -c "rm -f $USER_DIR/$libso"
+			echo "rm -f $USER_DIR/$libso"
+		fi
+			devel-su user -c "ln -s $LIBS_DIR/$libso $USER_DIR"
+			echo "ln -s $LIBS_DIR/$libso $USER_DIR"
+	done
+	#copy ioquake3 init config file to user directory	
+	QCFGS=`ls $MISC_DIR`
+	for cfg in $QCFGS; do
+		if [ -e $USER_DIR/$cfg ]; then
+			devel-su user -c "rm -f $USER_DIR/$cfg"
+			echo "rm -f $USER_DIR/$cfg"
+		fi
+			devel-su user -c "cp $MISC_DIR/$cfg $USER_DIR"
+			echo "cp $MISC_DIR$cfg $USER_DIR"
+	done
+fi
+
+#define END

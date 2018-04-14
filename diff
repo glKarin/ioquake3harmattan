@@ -1,0 +1,68 @@
+diff --git a/code/client/cl_input.c b/code/client/cl_input.c
+index 6be0900..7796f17 100644
+--- a/code/client/cl_input.c
++++ b/code/client/cl_input.c
+@@ -374,8 +374,13 @@ void CL_MouseEvent( int dx, int dy, int time ) {
+ 	} else if (Key_GetCatcher( ) & KEYCATCH_CGAME) {
+ 		VM_Call (cgvm, CG_MOUSE_EVENT, dx, dy);
+ 	} else {
++#if 0
+ 		cl.mouseDx[cl.mouseIndex] += (dx - cls.glconfig.vidWidth / 2) * cl_sensitivity->value;
+ 		cl.mouseDy[cl.mouseIndex] += (dy - cls.glconfig.vidHeight / 2) * cl_sensitivity->value;
++#else
++		cl.mouseDx[cl.mouseIndex] += dx;
++		cl.mouseDy[cl.mouseIndex] += dy;
++#endif
+ 	}
+ }
+ 
+diff --git a/code/egl/egl_input.c b/code/egl/egl_input.c
+index e06665f..1f30fd7 100644
+--- a/code/egl/egl_input.c
++++ b/code/egl/egl_input.c
+@@ -475,17 +473,14 @@ static void Accelerometer_HandleEvents(void)
+-static qboolean motionPressed = qfalse;
++static qboolean tsPressed = qfalse;
+ 
+ qboolean IN_MotionPressed(void)
+ {
+-	return motionPressed;
++	return tsPressed;
+ }
+ 
+ static void HandleEvents(void)
+@@ -537,16 +532,18 @@ static void HandleEvents(void)
+ 			t = Sys_XTimeToSysTime(event.xkey.time);
+ 			dx = event.xmotion.x;
+ 			dy = event.xmotion.y;
++			//Com_Printf ("MotionNotify: %d,%d\n", dx, dy);
+ 			break;
+ 
+ 		case ButtonPress:
+ 		case ButtonRelease:
+ 			t = Sys_XTimeToSysTime(event.xkey.time);
+-			motionPressed = (qboolean) (event.type == ButtonPress);
+-			if (Key_GetCatcher() & (KEYCATCH_CGAME | KEYCATCH_UI)) {
+-				Com_QueueEvent(t, SE_KEY, K_MOUSE1,
+-					       motionPressed, 0, NULL);
+-			}
++			tsPressed = (qboolean) (event.type == ButtonPress);
++			//if (Key_GetCatcher() & (KEYCATCH_CGAME | KEYCATCH_UI)) {
++			Com_QueueEvent(t, SE_KEY, K_MOUSE1, tsPressed, 0, NULL);
++			//}
++			Com_Printf ("Button%s: %d,%d (%d)\n", (event.type == ButtonPress) ? "Press" : "Release", dx, dy,
++				    t);
+ 			break;
+ 
+ 		case CreateNotify:
+@@ -561,8 +558,9 @@ static void HandleEvents(void)
+ 		}
+ 	}
+ 
+-	if (motionPressed) {
++	if (tsPressed) {
+ 		Com_QueueEvent(t, SE_MOUSE, dx, dy, 0, NULL);
++		Com_Printf ("SE_MOUSE: %d,%d\n", dx, dy);
+ 	}
+ 
+ 	Proximity_HandleEvents();
