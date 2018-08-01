@@ -1,0 +1,31 @@
+Format: 1.8
+Date: Sun, 29 Jul 2018 09:09:18 +0800
+Source: ioquake3-touch
+Binary: ioquake3-touch
+Architecture: source armel
+Version: 1558-6-harmattan2015fiora
+Distribution: unstable
+Urgency: low
+Maintainer: Karin Zhao <beyondk2000@gmail.com>
+Changed-By: Karin Zhao <beyondk2000@gmail.com>
+Description: 
+ ioquake3-touch - Quake III Arena ( OpenGL ES 1.1 ported version ) - Support to Mul
+Changes: 
+ ioquake3-touch (1558-6-harmattan2015fiora) unstable; urgency=low
+ .
+   * New virtual button layer. The virtual button layer is in client now, and not depends external library or qvm. So you can play multi-player game on other server, but don't using "Auto-Aim" button to fire, otherwise the server may be kick you.
+   * Enable touch-click on menu.
+   * Add virtual keyboard on console.
+   * Fixed lightmap-shadows effect of map on scene.
+   * Add "Space" virtual button on multiplayer-game menu.
+   * Add new 2 command:
+   * harm_usingVKB: boolean(0 / 1) default is 1 - enable/disable virtual button layer.
+   * harm_swipeSens: float(greater than 0.0) default is 0.5 - swipe gesture sensitivity on virtual button layer.
+Checksums-Sha1: 
+ 76bc7d9b5921bcb65a50670a0da7acf47b8b47f1 555 ioquake3-touch_1558-6-harmattan2015fiora.dsc
+ 45629d059fa83bcc8a1015e654e8f3c4dae7fab7 18276306 ioquake3-touch_1558-6-harmattan2015fiora.tar.gz
+ 300f46df59b2087af9b46180844f67f6e1b02a84 4221594 ioquake3-touch_1558-6-harmattan2015fiora_armel.deb
+Files: 
+ 1cf10864e6bc8e1fd843c46bfb31a9e9 555 user/games extra ioquake3-touch_1558-6-harmattan2015fiora.dsc
+ 1e13e21565cdad7cc1569b782e8a077c 18276306 user/games extra ioquake3-touch_1558-6-harmattan2015fiora.tar.gz
+ ac0f7adb14249f31a3bc90af66f0ac6e 4221594 user/games extra ioquake3-touch_1558-6-harmattan2015fiora_armel.deb
