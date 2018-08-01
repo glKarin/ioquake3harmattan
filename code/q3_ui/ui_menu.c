@@ -40,6 +40,9 @@ MAIN MENU
 #define ID_TEAMARENA		15
 #define ID_MODS					16
 #define ID_EXIT					17
+#ifdef _HARMATTAN_3_EXT
+#define ID_ABOUT_HARM					18
+#endif
 
 #define MAIN_BANNER_MODEL				"models/mapobjects/banner/banner5.md3"
 #define MAIN_MENU_VERTICAL_SPACING		34
@@ -58,6 +61,9 @@ typedef struct {
 	menutext_s		exit;
 
 	qhandle_t		bannerModel;
+#ifdef _HARMATTAN_3_EXT
+	menutext_s		about_harm;
+#endif
 } mainmenu_t;
 
 
@@ -128,6 +134,12 @@ void Main_MenuEvent (void* ptr, int event) {
 	case ID_EXIT:
 		UI_ConfirmMenu( "EXIT GAME?", 0, MainMenu_ExitAction );
 		break;
+
+#ifdef _HARMATTAN_3_EXT
+	case ID_ABOUT_HARM:
+		UI_HarmMenu();
+		break;
+#endif
 	}
 }
 
@@ -390,6 +402,19 @@ void UI_MainMenu( void ) {
 	s_main.mods.color					= color_red;
 	s_main.mods.style					= style;
 
+#ifdef _HARMATTAN_3_EXT
+	y += MAIN_MENU_VERTICAL_SPACING;
+	s_main.about_harm.generic.type				= MTYPE_PTEXT;
+	s_main.about_harm.generic.flags				= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
+	s_main.about_harm.generic.x					= 320;
+	s_main.about_harm.generic.y					= y;
+	s_main.about_harm.generic.id					= ID_ABOUT_HARM;
+	s_main.about_harm.generic.callback			= Main_MenuEvent; 
+	s_main.about_harm.string						= "HARMATTAN VER";
+	s_main.about_harm.color						= color_red;
+	s_main.about_harm.style						= style;
+#endif
+
 	y += MAIN_MENU_VERTICAL_SPACING;
 	s_main.exit.generic.type				= MTYPE_PTEXT;
 	s_main.exit.generic.flags				= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
@@ -410,6 +435,9 @@ void UI_MainMenu( void ) {
 		Menu_AddItem( &s_main.menu,	&s_main.teamArena );
 	}
 	Menu_AddItem( &s_main.menu,	&s_main.mods );
+#ifdef _HARMATTAN_3_EXT
+	Menu_AddItem( &s_main.menu,	&s_main.about_harm);
+#endif
 	Menu_AddItem( &s_main.menu,	&s_main.exit );             
 
 	trap_Key_SetCatcher( KEYCATCH_UI );

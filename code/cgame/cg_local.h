@@ -1499,11 +1499,6 @@ void CG_TransitionPlayerState( playerState_t *ps, playerState_t *ops );
 void CG_CheckChangedPredictableEvents( playerState_t *ps );
 
 
-#ifdef _HARMATTAN
-// virtual buttons state
-void CG_UpdateVirtualButtonState(int index, qboolean pressed);
-#endif
-
 //===============================================
 
 //

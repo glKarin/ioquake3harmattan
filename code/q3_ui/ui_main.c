@@ -61,6 +61,12 @@ intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, int arg4, 
 		UI_MouseEvent( arg0, arg1 );
 		return 0;
 
+#ifdef _HARMATTAN_3
+	case UI_TOUCH_EVENT:
+		UI_TouchEvent( arg0, arg1 );
+		return 0;
+#endif
+
 	case UI_REFRESH:
 		UI_Refresh( arg0 );
 		return 0;
@@ -80,11 +86,6 @@ intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, int arg4, 
 		return 0;
 	case UI_HASUNIQUECDKEY:				// mod authors need to observe this
 		return qtrue;  // change this to qfalse for mods!
-#ifdef _HARMATTAN_PLUS
-	case UI_UPDATE_VIRTUALBUTTON_STATE:
-		UI_UpdateVirtualButtonState(arg0, arg1);
-		return 0;
-#endif
 	}
 
 	return -1;

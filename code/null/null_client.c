@@ -87,4 +87,13 @@ void CL_StartHunkUsers( qboolean rendererOnly ) {
 
 void CL_ShutdownAll(void) {}
 
+#ifdef _HARMATTAN_3 // for compile server.
+void CL_TouchEvent( int ax, int ay, int time )
+{
+}
+void CL_AccelEvent(int dx, int dy, int time)
+{
+}
+#endif
+
 qboolean CL_CDKeyValidate( const char *key, const char *checksum ) { return qtrue; }

@@ -20,12 +20,8 @@
 #include "../qcommon/q_shared.h"
 
 #ifdef _HARMATTAN_PLUS
-static qboolean motionPressed = qtrue;
-
-qboolean IN_MotionPressed(void)
-{
-	return motionPressed;
-}
+#include "../karin/m_xi2.h"
+#include "../karin/gl_vkb.h"
 #endif
 
 #ifdef _HARMATTAN_UNUSED
@@ -37,666 +33,10 @@ qboolean IN_MotionPressed(void)
 #define FIXED_X_COORD(x) (x + 107)
 #endif
 
-#ifdef _HARMATTAN
-#include "egl_vkb.h"
-
-typedef struct
-{
-	const char *binding;
-	int key;
-}key_binding_map;
-
-static key_binding_map vb_functions[VB_TotalFunction] = 
-{
-	{ "+attack", K_ENTER },
-	{ NULL, K_ESCAPE },
-	{ "+lookup", K_UPARROW},
-	{ "+lookdown", K_DOWNARROW},
-	{ "+left", K_LEFTARROW},
-	{ "+right", K_RIGHTARROW},
-	{ "centerview", 0},
-	{ "+forward", 0},
-	{ "+back", 0},
-	{ "+moveleft", 0},
-	{ "+moveright", 0},
-	{ "+moveup", 0},
-	{ "+movedown", 0},
-	{ "weapon 1", 0},
-	{ "weapon 2", 0},
-	{ "weapon 3", 0},
-	{ "weapon 4", 0},
-	{ "weapon 5", 0},
-	{ "weapon 6", 0},
-	{ "weapon 7", 0},
-	{ "weapon 8", 0},
-	{ "weapon 9", 0},
-	{ "weapprev", 0},
-	{ "weapnext", 0},
-	{ "+button2", 0},
-	{ "+scores", 0},
-	{ "+speed", 0},
-	{ "+zoom", 0}
-};
-typedef struct
-{
-	int TLx; //top-left point X
-	int TLy; //top-left point Y
-	int BRx; //bottom-right point X
-	int BRy; //bottom-right point Y
-	const char *binding; //binding key
-	int key; //key
-} VB_Rect;
-
-static VB_Rect vb_rects[VB_TotalFunction];
-static VB_Rect vb_baserects[turncenter_vkb];
-
-static void InitRectPosition(int index, int x, int y, int count)
-{
-	if(index < 0 || index >= VB_TotalFunction)
-		return;
-	VB_Rect *rect = &(vb_rects[index]);
-	rect -> TLx = x;
-	rect -> TLy = y;
-	rect -> BRx = x + VBW / 2 * count;
-	rect -> BRy = y + VBW;
-	rect -> binding = vb_functions[index].binding;
-	rect -> key = vb_functions[index].key;
-}
-
-static void InitMenuRectPosition(int index, int x, int y, int count)
-{
-	if(index < 0 || index >= turncenter_vkb)
-		return;
-	VB_Rect *rect = &(vb_baserects[index]);
-	rect -> TLx = FIXED_X_COORD(x);
-	rect -> TLy = y;
-	rect -> BRx = FIXED_X_COORD(x) + VBW / 2 * count;
-	rect -> BRy = y + VBW;
-	rect -> binding = NULL;
-	rect -> key = vb_functions[index].key;
-}
-
-static void InitRectPositionByCoord(int index, int x1, int y1, int x2, int y2)
-{
-	if(index < 0 || index >= VB_TotalFunction)
-		return;
-	VB_Rect *rect = &(vb_rects[index]);
-	rect -> TLx = x1;
-	rect -> TLy = y1;
-	rect -> BRx = x2 + VBW;
-	rect -> BRy = y2 + VBW;
-	rect -> binding = vb_functions[index].binding;
-	rect -> key = vb_functions[index].key;
-}
-
-static void InitVirtualButton(void)
-{
-	Com_DPrintf("\n------- On-Screen Buttons Position Initialization...... -------\n");
-	//for game
-	// w s a d
-	InitRectPositionByCoord(forward_vkb, MOVELEFT_X, FORWARD_Y, MOVERIGHT_X,  FORWARD_Y);
-	InitRectPositionByCoord(backward_vkb, MOVELEFT_X, BACKWARD_Y, MOVERIGHT_X, BACKWARD_Y);
-	InitRectPositionByCoord(moveleft_vkb, MOVELEFT_X, FORWARD_Y, MOVELEFT_X, BACKWARD_Y);
-	InitRectPositionByCoord(moveright_vkb, MOVERIGHT_X, FORWARD_Y, MOVERIGHT_X, BACKWARD_Y);
-	//home end pageup pagedown center
-	InitRectPositionByCoord(turnup_vkb, TURNLEFT_X, TURNUP_Y, TURNRIGHT_X, TURNUP_Y);
-	InitRectPositionByCoord(turndown_vkb, TURNLEFT_X, TURNDOWN_Y, TURNRIGHT_X, TURNDOWN_Y);
-	InitRectPositionByCoord(turnleft_vkb, TURNLEFT_X, TURNUP_Y, TURNLEFT_X, TURNDOWN_Y);
-	InitRectPositionByCoord(turnright_vkb, TURNRIGHT_X, TURNUP_Y, TURNRIGHT_X, TURNDOWN_Y);
-	InitRectPosition(turncenter_vkb, TURNCENTER_X, TURNCENTER_Y, 2);
-	//jump down
-	InitRectPosition(jump_vkb, JUMP_X, JUMP_Y, 4);
-	InitRectPosition(down_vkb, DOWN_X, DOWN_Y, 4);
-	//1 - 9
-	InitRectPosition(weapon1_vkb, WEAPON1_X, WEAPON1_Y, 2);
-	InitRectPosition(weapon2_vkb, WEAPON2_X, WEAPON2_Y, 2);
-	InitRectPosition(weapon3_vkb, WEAPON3_X, WEAPON3_Y, 2);
-	InitRectPosition(weapon4_vkb, WEAPON4_X, WEAPON4_Y, 2);
-	InitRectPosition(weapon5_vkb, WEAPON5_X, WEAPON5_Y, 2);
-	InitRectPosition(weapon6_vkb, WEAPON6_X, WEAPON6_Y, 2);
-	InitRectPosition(weapon7_vkb, WEAPON7_X, WEAPON7_Y, 2);
-	InitRectPosition(weapon8_vkb, WEAPON8_X, WEAPON8_Y, 2);
-	InitRectPosition(weapon9_vkb, WEAPON9_X, WEAPON9_Y, 2);
-	//prev next
-	InitRectPosition(prevweapon_vkb, PREVWEAPON_X, PREVWEAPON_Y, 3);
-	InitRectPosition(nextweapon_vkb, NEXTWEAPON_X, NEXTWEAPON_Y, 3);
-	//functional
-	InitRectPosition(fire_vkb, FIRE_X, FIRE_Y, 3);
-	InitRectPosition(useitem_vkb, USEITEM_X, USEITEM_Y, 3);
-	InitRectPosition(escape_vkb, ESCAPE_X, ESCAPE_Y, 2);
-	InitRectPosition(score_vkb, SCORE_X, SCORE_Y, 2);
-	InitRectPosition(walk_vkb, WALK_X, WALK_Y, 3);
-	InitRectPosition(zoom_vkb, ZOOM_X, ZOOM_Y, 3);
-
-	//for menu
-	//enter cancel
-	InitMenuRectPosition(fire_vkb, ENTER_X, ENTER_Y, 4);
-	InitMenuRectPosition(escape_vkb, CANCEL_X, CANCEL_Y, 4);
-	//left right up down arrow
-	InitMenuRectPosition(turnup_vkb, TOUP_X, TOUP_Y, 2);
-	InitMenuRectPosition(turndown_vkb, TODOWN_X, TODOWN_Y, 2);
-	InitMenuRectPosition(turnleft_vkb, TOLEFT_X, TOLEFT_Y, 2);
-	InitMenuRectPosition(turnright_vkb, TORIGHT_X, TORIGHT_Y, 2);
-	Com_DPrintf("------- done -------\n");
-}
-#endif
-
-#ifdef _HARMATTAN_PLUS
-XIDeviceInfo *xi_master = NULL;
-int xi_opcode = 0;
-
-#define ATOM_COUNT 3
-#define XI2_X11_ATOM_NAME(id,name) name,
-
-const char * atom_names[ATOM_COUNT] = {
-	XI2_X11_ATOM_NAME(AbsMTTrackingID, "Abs MT Tracking ID")
-		XI2_X11_ATOM_NAME(AbsMTPositionX, "Abs MT Position X")
-		XI2_X11_ATOM_NAME(AbsMTPositionY, "Abs MT Position Y")
-};
-
-Atom atoms[ATOM_COUNT];
-
-static inline void MultiClickHandler(int index, int event_x, int event_y, Bool state, VB_Rect *rect)
-{
-	if(((event_x >= rect -> TLx) && (event_x <= rect -> BRx)) 
-			&& ((event_y >= rect -> TLy) && (event_y <= rect -> BRy)))
-	{
-		qboolean pressed = state ? qtrue : qfalse;
-		if(Key_GetCatcher() == 0 && index == fire_vkb)
-		{
-			motionPressed = pressed ? qfalse : qtrue;
-			if(pressed)
-				CL_AutoAim();
-		}
-		if(Key_GetCatcher() == 0)
-			CL_UpdateVirtualButtonState(index, (qboolean)state);
-		else
-			CL_UpdateMenuVirtualButtonState(index, (qboolean)state);
-		//int	time = Sys_Milliseconds();
-		int key;
-		if(rect -> binding)
-			key = Key_GetKey(rect -> binding);
-		else
-			key = rect -> key;
-		if(key > -1)
-		{
-			Com_QueueEvent(Sys_Milliseconds(), SE_KEY, key, pressed, 0, NULL);
-		}
-	}
-}
-
-static inline void MultiCancelHandler(int index, int nx, int ny, int ox, int oy, VB_Rect *rect)
-{
-	qboolean ob = (((ox >= rect -> TLx) && (ox <= rect -> BRx)) 
-			&& ((oy >= rect -> TLy) && (oy <= rect -> BRy)));
-	qboolean nb = (((nx >= rect -> TLx) && (nx <= rect -> BRx)) 
-			&& ((ny >= rect -> TLy) && (ny <= rect -> BRy)));
-	if(ob == qtrue && nb == qfalse) //release
-	{
-		if(Key_GetCatcher() == 0 && index == fire_vkb)
-		{
-			motionPressed = qtrue;
-		}
-		if(Key_GetCatcher() == 0)
-			CL_UpdateVirtualButtonState(index, qfalse);
-		else
-			CL_UpdateMenuVirtualButtonState(index, qfalse);
-		//int	time = Sys_Milliseconds();
-		int key;
-		if(rect -> binding)
-			key = Key_GetKey(rect -> binding);
-		else
-			key = rect -> key;
-		if(key > -1)
-		{
-			Com_QueueEvent(Sys_Milliseconds(), SE_KEY, key, qfalse, 0, NULL);
-		}
-	}
-	else if(ob == qfalse && nb == qtrue) //press
-	{
-		if(Key_GetCatcher() == 0 && index == fire_vkb)
-		{
-			motionPressed = qfalse;
-			CL_AutoAim();
-		}
-		if(Key_GetCatcher() == 0)
-			CL_UpdateVirtualButtonState(index, qtrue);
-		else
-			CL_UpdateMenuVirtualButtonState(index, qtrue);
-		//int	time = Sys_Milliseconds();
-		int key;
-		if(rect -> binding)
-			key = Key_GetKey(rect -> binding);
-		else
-			key = rect -> key;
-		if(key > -1)
-		{
-			Com_QueueEvent(Sys_Milliseconds(), SE_KEY, key, qtrue, 0, NULL);
-		}
-	}
-	//else not to do
-}
-
-static void CheckMultiButton(int x, int y, Bool state)
-{
-	int i;
-	if(Key_GetCatcher() == 0)
-	{
-		for(i = 0; i < VB_TotalFunction; i++)
-			MultiClickHandler(i, x, y, state, &(vb_rects[i]));
-	}
-	else
-	{
-		for(i = 0; i < turncenter_vkb; i++)
-			MultiClickHandler(i, x, y, state, &(vb_baserects[i]));
-	}
-}
-
-static void CheckMultiMove(int nx, int ny, int ox, int oy, Bool state)
-{
-	if(!state)
-		return;
-	int i;
-	if(Key_GetCatcher() == 0)
-	{
-		for(i = 0; i < VB_TotalFunction; i++)
-			MultiCancelHandler(i, nx, ny, ox, oy, &(vb_rects[i]));
-	}
-	else
-	{
-		for(i = 0; i < turncenter_vkb; i++)
-			MultiCancelHandler(i, nx, ny, ox, oy, &(vb_baserects[i]));
-	}
-}
-
-/* These are static for our mouse handling code */
-typedef struct
-{
-	int MouseX;
-	int MouseY;
-	int DeltaX;
-	int DeltaY;
-	Bool ButtonState;
-}MultiMouse;
-#define MAXMOUSE 10
-static MultiMouse multi_mouses[MAXMOUSE];
-#define MOUSE_MAX_X (N950SW - 1)
-#define MOUSE_MAX_Y (N950SH - 1)
-
-void MouseInit(void)
-{
-	/* The mouse is at (0,0) */
-	int i;
-	for (i = 0; i < MAXMOUSE; i++) {
-		multi_mouses[i].MouseX = 0;
-		multi_mouses[i].MouseY = 0;
-		multi_mouses[i].DeltaX = 0;
-		multi_mouses[i].DeltaY = 0;
-		multi_mouses[i].ButtonState = False;
-	}
-}
-
-static Bool GetMultiMouseState (int which, int *x, int *y)
-{
-	const MultiMouse * const mm = &(multi_mouses[which]);
-	if ( x ) {
-		*x = mm -> MouseX;
-	}
-	if ( y ) {
-		*y = mm -> MouseY;
-	}
-	return(mm -> ButtonState);
-}
-
-static Bool GetRelativeMultiMouseState (int which, int *x, int *y)
-{
-	MultiMouse * const mm = &(multi_mouses[which]);
-	if ( x )
-		*x = mm -> DeltaX;
-	if ( y )
-		*y = mm -> DeltaY;
-	mm -> DeltaX = 0;
-	mm -> DeltaY = 0;
-	return(mm -> ButtonState);
-}
-
-static Bool PrivateMultiMouseMotion(int which, Bool buttonstate, int relative, int x, int y)
-{
-	int X, Y;
-	int Xrel;
-	int Yrel;
-
-	MultiMouse * const mm = &(multi_mouses[which]);
-	/* Default buttonstate is the current one */
-	if ( ! buttonstate ) {
-		buttonstate = mm -> ButtonState;
-	}
-
-	Xrel = x;
-	Yrel = y;
-	if ( relative ) {
-		/* Push the cursor around */
-		x = (mm -> MouseX + x);
-		y = (mm -> MouseY + y);
-	} else {
-		/* Do we need to clip {x,y} ? */
-		//ClipOffset(&x, &y);
-	}
-
-	/* Mouse coordinates range from 0 - width-1 and 0 - height-1 */
-	if ( x < 0 )
-		X = 0;
-	else
-	if ( x >= MOUSE_MAX_X )
-		X = MOUSE_MAX_X-1;
-	else
-		X = x;
-
-	if ( y < 0 )
-		Y = 0;
-	else
-	if ( y >= MOUSE_MAX_Y )
-		Y = MOUSE_MAX_Y-1;
-	else
-		Y = y;
-
-	/* If not relative mode, generate relative motion from clamped X/Y.
-	   This prevents lots of extraneous large delta relative motion when
-	   the screen is windowed mode and the mouse is outside the window.
-	*/
-	if ( ! relative ) {
-		Xrel = X - mm -> MouseX;
-		Yrel = Y - mm -> MouseY;
-	}
-
-	/* Drop events that don't change state */
-	if ( ! Xrel && ! Yrel ) {
-#if 0
-printf("Mouse event didn't change state - dropped!\n");
-#endif
-		return(False);
-	}
-
-	/* Update internal mouse state */
-	mm -> ButtonState = buttonstate;
-	mm -> MouseX = X;
-	mm -> MouseY = Y;
-	mm -> DeltaX += Xrel;
-	mm -> DeltaY += Yrel;
-	/*
-	if (which == 0) {
-		// Redraw main pointer
-		//SDL_MoveCursor(X, Y);
-		//WILLTODO
-	}
-*/
-
-	CheckMultiMove(X, Y, X - Xrel, Y - Yrel, buttonstate);
-
-	/* Post the event, if desired */
-	/*
-	if ( SDL_ProcessEvents[SDL_MOUSEMOTION] == SDL_ENABLE ) {
-		SDL_Event event;
-		SDL_memset(&event, 0, sizeof(event));
-		event.type = SDL_MOUSEMOTION;
-		event.motion.which = which;
-		event.motion.state = buttonstate;
-		event.motion.x = X;
-		event.motion.y = Y;
-		event.motion.xrel = Xrel;
-		event.motion.yrel = Yrel;
-		if ( (SDL_EventOK == NULL) || (*SDL_EventOK)(&event) ) {
-			posted = 1;
-			SDL_PushEvent(&event);
-		}
-	}
-	return(posted);
-	*/
-	return(True);
-}
-
-static Bool PrivateMultiMouseButton(int which, Bool state, int button/*left button*/, int x, int y)
-{
-	int move_mouse;
-	Bool buttonstate;
-	MultiMouse * const mm = &(multi_mouses[which]);
-
-	/* Check parameters */
-	if ( x || y ) {
-		//ClipOffset(&x, &y);
-		move_mouse = 1;
-		/* Mouse coordinates range from 0 - width-1 and 0 - height-1 */
-		if ( x < 0 )
-			x = 0;
-		else
-		if ( x >= MOUSE_MAX_X )
-			x = MOUSE_MAX_X-1;
-
-		if ( y < 0 )
-			y = 0;
-		else
-		if ( y >= MOUSE_MAX_Y )
-			y = MOUSE_MAX_Y-1;
-	} else {
-		move_mouse = 0;
-	}
-	if ( ! x )
-		x = mm -> MouseX;
-	if ( ! y )
-		y = mm -> MouseY;
-
-	/* Figure out which event to perform */
-	buttonstate = mm -> ButtonState;
-	buttonstate = state;
-
-	/* Update internal mouse state */
-	mm -> ButtonState = buttonstate;
-	if ( move_mouse ) {
-		mm -> MouseX = x;
-		mm -> MouseY = y;
-		/*
-		if (which == 0) {
-			//SDL_MoveCursor(x, y);
-			//WILLTODO
-		}
-		*/
-	}
-
-	CheckMultiButton(x, y, buttonstate);
-	/* Post the event, if desired */
-	/*
-	if ( SDL_ProcessEvents[event.type] == SDL_ENABLE ) {
-		event.button.which = which;
-		event.button.state = state;
-		event.button.button = button;
-		event.button.x = x;
-		event.button.y = y;
-		if ( (SDL_EventOK == NULL) || (*SDL_EventOK)(&event) ) {
-			posted = 1;
-			SDL_PushEvent(&event);
-		}
-	}
-	*/
-	return(True);
-}
-
-static void ResetMultiMouse(int which)
-{
-	if( !multi_mouses[which].ButtonState )
-		return;
-
-	PrivateMultiMouseButton(which, False, 1/*left button*/, 0, 0);
-}
-
-static void ResetMouse(void)
-{
-	int i;
-	for (i = 0; i < MAXMOUSE; i++) {
-		ResetMultiMouse(i);
-	}
-}
-
-//extern
-int X11_XInput2_SetMasterPointer(int deviceid)
-{
-	int device_count = 0, i;
-	if (xi_master) {
-		XIFreeDeviceInfo(xi_master);
-		xi_master = NULL;
-	}
-
-	xi_master = XIQueryDevice(dpy, deviceid, &device_count);
-	if (!xi_master) {
-		/* Master deviceid no longer exists? */
-		return -1;
-	}
-
-	for (i = 0; i < xi_master->num_classes; i++) {
-		if (xi_master->classes[i]->type == XIValuatorClass) {
-			XIValuatorClassInfo *valuator = (XIValuatorClassInfo*)(xi_master->classes[i]);
-			if (valuator->label == atom(AbsMTTrackingID)) {
-				break;
-			}
-		}
-	}
-
-	return 0;
-}
-/* Ack!  XPending() actually performs a blocking read if no events available */
-static int X11_Pending(Display *display)
-{
-	/* Flush the display connection and look to see if events are queued */
-	XFlush(display);
-	if ( XEventsQueued(display, QueuedAlready) ) {
-		return(1);
-	}
-
-	/* More drastic measures are required -- see if X is ready to talk */
-	{
-		static struct timeval zero_time;	/* static == 0 */
-		int x11_fd;
-		fd_set fdset;
-
-		x11_fd = ConnectionNumber(display);
-		FD_ZERO(&fdset);
-		FD_SET(x11_fd, &fdset);
-		if ( select(x11_fd+1, &fdset, NULL, NULL, &zero_time) == 1 ) {
-			return(XPending(display));
-		}
-	}
-
-	/* Oh well, nothing is ready .. */
-	return(0);
-}
-
-static inline void X11_XInput2_ClipTouch(int* val, int min, int size)
-{
-	if (*val < min || *val > (min + size)) {
-		*val = -1;
-	} else {
-		*val -= min;
-	}
-}
-
-static int X11_XInput2_DispatchTouchDeviceEvent(XIDeviceEvent *e)
-{
-	double v;
-	int x, y;
-	int active;
-	int i;
-
-	/* Sadly, we need to scale and clip the coordinates on our own. Prepare for this. */
-	//const int screen_w = DisplayWidth(SDL_Display, SDL_Screen);
-	//const int screen_h = DisplayHeight(SDL_Display, SDL_Screen);
-	const int screen_w = N950SW;
-	const int screen_h = N950SH;
-
-	active = 0;
-	for (i = 0; i < xi_master->num_classes; i++) {
-		XIAnyClassInfo* any = xi_master->classes[i];
-		//if (xi_master->classes[i]->type == XIValuatorClass) {
-		if (any->type == XIValuatorClass) {
-			XIValuatorClassInfo *valuator = (XIValuatorClassInfo*)(any);
-			int n = valuator->number;
-
-			if (!XIMaskIsSet(e->valuators.mask, n)) {
-				/* This event does not contain this evaluator's value. */
-				continue;
-			}
-
-			if (valuator->label == atom(AbsMTPositionX)) {
-				v = e->valuators.values[n];
-				v = (v - valuator->min) / (valuator->max - valuator->min);
-				x = round(screen_w * v);
-				//X11_XInput2_ClipTouch(&x, win_x, SCREEN_WIDTH); // No Use in full screen mode.
-			} else if (valuator->label == atom(AbsMTPositionY)) {
-				v = e->valuators.values[n];
-				v = (v - valuator->min) / (valuator->max - valuator->min);
-				y = round(screen_h * v);
-				//X11_XInput2_ClipTouch(&y, win_y, SCREEN_HEIGHT); // No Use in full screen mode.
-			} else if (valuator->label == atom(AbsMTTrackingID)) {
-				/* Tracking ID is always the last valuator for a contact point,
-				 * and indicates which finger we have been talking about previously. */
-				int id = e->valuators.values[n];
-				if (id >= MAXMOUSE) {
-					/* Too many contact points! Discard! */
-					continue;
-				}
-				if (x == -1 || y == -1) {
-					/* Outside of the window, discard. */
-					continue;
-				}
-				active |= 1 << id;
-				if (GetMultiMouseState(id, NULL, NULL)) {
-					/* We already knew about this finger; therefore, this is motion. */
-					PrivateMultiMouseMotion(id, True, 0, x, y);
-				} else {
-					/* We did not know about this finger; therefore, this is a button press. */
-					PrivateMultiMouseMotion(id, False, 0, x, y);
-					PrivateMultiMouseButton(id, True, 1/*left button*/, 0, 0);
-				}
-			}
-		}
-	}
-
-	/* Now enumerate all mouses and kill those that are not active. */
-	for (i = 0; i < MAXMOUSE; i++) {
-		if (!(active & (1 << i))) {
-			ResetMultiMouse(i); /* Will send released events for pressed buttons. */
-		}
-	}
-
-	return 1;
-}
-
-static int X11_XInput2_DispatchDeviceChangedEvent(XIDeviceChangedEvent *e)
-{
-	if (xi_master && e->deviceid == xi_master->deviceid) {
-		/* Only care about slave change events of the master pointer, for now. */
-		ResetMouse();
-		X11_XInput2_SetMasterPointer(e->deviceid);
-		return 1;
-	}
-	return 0;
-}
-
-static void LookupMultiButtonState(void)
-{
-	ri.Printf(PRINT_ALL, "------------------------------\n");
-	int i;
-	for(i = 0; i < MAXMOUSE; i++)
-	{
-		if(multi_mouses[i].ButtonState)
-			ri.Printf(PRINT_ALL, "Finger -> %d ,Mouse X -> %d ,Mouse Y -> %d , Delta X -> %d ,Delta Y -> %d ,Button State -> %d\n", i, multi_mouses[i].MouseX, multi_mouses[i].MouseY, multi_mouses[i].DeltaX, multi_mouses[i].DeltaY, multi_mouses[i].ButtonState);
-	}
-}
-
-#endif
-
 #ifdef _HARMATTAN_UNUSED
 static int mwx, mwy;
-static int mx = 0, my = 0;
 #endif
+static int mx = 0, my = 0;
 static qboolean mouse_active = qfalse;
 static qboolean mouse_avail = qfalse;
 
@@ -723,6 +63,220 @@ static int mouse_threshold;
 #endif
 
 static int win_x, win_y;
+
+#ifdef _HARMATTAN_3
+//#define _FLOAT_TO_INT round
+//#define _FLOAT_TO_INT floor
+#define _FLOAT_TO_INT
+//#define HARM_SWIPE_SENS(x) ((x) / 2)
+
+static qboolean motionPressed = qtrue;
+
+static int karinSwipeSens(int x)
+{
+	float sens = harm_swipeSens->value;
+	if(sens <= 0.0)
+		sens = 0.5;
+	return (int)_FLOAT_TO_INT((float)x * sens);
+}
+
+static unsigned karinHandleVKBAction(int action, unsigned pressed, int dx, int dy)
+{
+#define		MAXCMDLINE	256
+#define		MAXCMDLENGTH 1024
+	static int _keys[MAXCMDLINE];
+	static char _cmd[MAXCMDLENGTH];
+	unsigned int key_count = 0;
+	unsigned int t = Sys_XTimeToSysTime(myxitime);
+
+	int r = karinGetActionData(action, _keys, MAXCMDLINE, &key_count, _cmd, MAXCMDLENGTH);
+	if(r == Cmd_Data)
+	{
+		char cmd[MAXCMDLENGTH];
+		if(pressed)
+		{
+			if (_cmd[0] == '+')
+			{	// button commands add keynum and time as a parm
+				Com_sprintf (cmd, sizeof(cmd), "%s %i %i\n", _cmd, _keys[0], t);
+				Cbuf_AddText(cmd);
+			}
+			else if(_cmd[0] == '*')
+			{
+				if(Key_GetCatcher() == 0 && strncmp(_cmd + 1, "attack", 6) == 0)
+				{
+					_cmd[0] = '+';
+					Com_sprintf (cmd, sizeof(cmd), "%s %i %i\n", _cmd, _keys[0], t);
+					motionPressed = qfalse;
+					CL_AutoAim();
+					Cbuf_AddText(cmd);
+				}
+			}
+			else
+			{
+				Cbuf_AddText(_cmd);
+				Cbuf_AddText("\n");
+			}
+		}
+		else
+		{
+			if (_cmd[0] == '+')
+			{
+				Com_sprintf (cmd, sizeof(cmd), "-%s %i %i\n", _cmd+1, _keys[0], t);
+				Cbuf_AddText(cmd);
+				if(Key_GetCatcher() == 0 && strncmp(_cmd, "+attack", 7) == 0)
+				{
+					motionPressed = qtrue;
+				}
+			}
+			else if(_cmd[0] == '*')
+			{
+				if(Key_GetCatcher() == 0 && strncmp(_cmd + 1, "attack", 6) == 0)
+				{
+					_cmd[0] = '-';
+					motionPressed = qtrue;
+					Com_sprintf (cmd, sizeof(cmd), "%s %i %i\n", _cmd, _keys[0], t);
+					Cbuf_AddText(cmd);
+				}
+			}
+		}
+		return 1;
+	}
+	else if(r == Key_Data)
+	{
+		int i = 0;
+		for(i = 0; i < key_count; i++)
+		{
+			Com_QueueEvent(t, SE_KEY, _keys[i], pressed, 0, NULL);
+		}
+		return 1;
+	}
+	else if(r == Char_Data)
+	{
+		int i = 0;
+		for(i = 0; i < key_count; i++)
+		{
+			if(_keys[i] == K_ENTER || _keys[i] == K_KP_ENTER)
+				Com_QueueEvent(t, SE_KEY, _keys[i], pressed, 0, NULL);
+			else
+			{
+				if(_keys[i] == K_SPACE && Key_GetCatcher() & KEYCATCH_UI)
+					Com_QueueEvent(t, SE_KEY, _keys[i], pressed, 0, NULL);
+				if(pressed/* && isprint((char)_keys[i])*/)
+					Com_QueueEvent(t, SE_CHAR, _keys[i], 0, 0, NULL);
+			}
+		}
+		return 1;
+	}
+	else if(r == Button_Data)
+	{
+		if(pressed && dx != 0 && dy != 0)
+		{
+			Com_QueueEvent(t, SE_MOUSE, karinSwipeSens(dx), karinSwipeSens(-dy), 0, NULL);
+			/*
+				 mx += dx;
+				 my -= dy;
+				 mouse_buttonstate = 0;
+				 */
+		}
+	}
+
+	return 0;
+#undef MAXCMDLINE
+#undef MAXCMDLENGTH
+}
+
+void karinAdjustFrom640(int *ox, int *oy, int x, int y)
+{
+	// for 640x480 virtualized screen
+	static const float _WP = 1.0 / 640.0;
+	static const float _HP = 1.0 / 480.0;
+	static const float _P = 640.0 / 480.0;
+
+	float xscale = glConfig.vidWidth * _WP;
+	float yscale = glConfig.vidHeight * _HP;
+	float bias;
+	if (glConfig.vidWidth * 480 > glConfig.vidHeight * 640) {
+		// wide screen
+		bias = 0.5 * (glConfig.vidWidth - (glConfig.vidHeight * _P));
+		xscale = yscale;
+	}
+	else {
+		// no wide screen
+		bias = 0;
+	}
+	//printf("%f %f %f\n", xscale, yscale, bias);
+	//printf("%f %f %f\n", 640.0*xscale, 480.0*yscale, bias);
+
+	if(ox)
+	{
+		int w = (int)((float)SCREEN_WIDTH * xscale);
+		int sx = (int)bias;
+		int fx;
+		if(x < sx)
+			fx = 0;
+		else if(x >= sx + w)
+			fx = w;
+		else
+			fx = x - sx;
+		*ox = fx;
+	}
+	if(oy)
+	{
+		int h = (int)((float)SCREEN_HEIGHT * yscale);
+		int fy;
+		if(y < 0)
+			fy = 0;
+		else if(y >= h)
+			fy = h;
+		else
+			fy = y;
+		*oy = fy;
+	}
+}
+
+Bool karinXI2MouseEvent(int button, Bool pressed, int x, int y)
+{
+	if(harm_usingVKB->integer && karinVKBMouseEvent(button, pressed, x, glConfig.vidHeight - y, karinHandleVKBAction))
+		return True;
+	if (Key_GetCatcher() & (KEYCATCH_UI)) {
+		unsigned int t = Sys_XTimeToSysTime(myxitime);
+		if(pressed)
+		{
+			int fx;
+			int fy;
+			karinAdjustFrom640(&fx, &fy, x, y);
+			Com_QueueEvent(t, SE_MOUSE, fx - mx, fy - my, 0, NULL); // for ui.qvm in game data pak1.pak when client not load ui.so of ioquake3-touch package.
+			Com_QueueEvent(t, SE_TOUCH, fx, fy, 0, NULL); // for ui.so in ioquake3-touch package.
+			mx = fx;
+			my = fy;
+		}
+		Com_QueueEvent(t, SE_KEY, K_MOUSE1, pressed, 0, NULL);
+		return True;
+	}
+	return False;
+}
+
+Bool karinXI2MotionEvent(int button, Bool pressed, int x, int y, int dx, int dy)
+{
+	if(harm_usingVKB->integer && karinVKBMouseMotionEvent(button, pressed, x, glConfig.vidHeight - y, dx, -dy, karinHandleVKBAction))
+		return True;
+	if (Key_GetCatcher() & (KEYCATCH_UI)) {
+		if(pressed)
+		{
+			unsigned int t = Sys_XTimeToSysTime(myxitime);
+			int fx;
+			int fy;
+			karinAdjustFrom640(&fx, &fy, x, y);
+			Com_QueueEvent(t, SE_MOUSE, fx - mx, fy - my, 0, NULL); // for ui.qvm in game data pak1.pak when client not load ui.so of ioquake3-touch package.
+			Com_QueueEvent(t, SE_TOUCH, fx, fy, 0, NULL); // for ui.so in ioquake3-touch package.
+			mx = fx;
+			my = fy;
+		}
+		return True;
+	}
+	return False;
+}
+#endif
 
 /*****************************************************************************
  ** KEYBOARD
@@ -986,7 +540,12 @@ static char *XLateKey(XKeyEvent * ev, int *key)
 			break;
 
 		case XK_twosuperior:
+#ifdef _HARMATTAN_3
+		case XK_Multi_key:  /* 0xff20     Multi-key character compose */
+			// N950 Sym key, also is 0xff20, same as N900 Sym key.
+#else
 		case 0xff20:			/* N900: Fn + Sym/Ctrl */
+#endif
 			*key = K_CONSOLE;
 			*buf = '\0';
 			break;
@@ -1163,21 +722,17 @@ static void Accelerometer_HandleEvents(void)
 
 #ifdef _HARMATTAN_UNUSED
 static qboolean motionPressed = qfalse;
+#endif
 
 qboolean IN_MotionPressed(void)
 {
 	return motionPressed;
 }
-#endif
 
 static void HandleEvents(void)
 {
 	int key;
 	XEvent event;
-#ifdef _HARMATTAN_PLUS
-	XIDeviceEvent *xi_event = NULL;
-	XIDeviceChangedEvent *xi_changeevent = NULL;
-#endif
 	char *p;
 #ifdef _HARMATTAN_UNUSED
 	static int x = 0, y = 0;	// absolute
@@ -1191,45 +746,46 @@ static void HandleEvents(void)
 #ifdef _HARMATTAN_PLUS
 	while (X11_Pending(dpy)) 
 #else
-	while (XPending(dpy)) 
+		while (XPending(dpy)) 
 #endif
-	{
-		XNextEvent(dpy, &event);
-		switch (event.type) {
-			case KeyPress:
-				t = Sys_XTimeToSysTime(event.xkey.time);
-				p = XLateKey(&event.xkey, &key);
-				if (key) {
+		{
+			XNextEvent(dpy, &event);
+			switch (event.type) {
+				case KeyPress:
+					t = Sys_XTimeToSysTime(event.xkey.time);
+					p = XLateKey(&event.xkey, &key);
+					if (key) {
 #ifdef _HARMATTAN_PLUS
-					if(Key_GetCatcher() == 0 && key == Key_GetKey("+attack"))
-					{
-						motionPressed = qfalse;
-						CL_AutoAim();
-					}
+						if(Key_GetCatcher() == 0 && key == Key_GetKey("+attack"))
+						{
+							motionPressed = qfalse;
+							CL_AutoAim();
+						}
 #endif
-					Com_QueueEvent(t, SE_KEY, key, qtrue, 0, NULL);
-				}
-				if (p) {
-					while (*p) {
-						Com_QueueEvent(t, SE_CHAR, *p++, 0, 0,
-								NULL);
+						Com_QueueEvent(t, SE_KEY, key, qtrue, 0, NULL);
 					}
-				}
-				break;
+					if (p) {
+						while (*p) {
+							//printf("%d '%c'\n", *p, *p);
+							Com_QueueEvent(t, SE_CHAR, *p++, 0, 0,
+									NULL);
+						}
+					}
+					break;
 
-			case KeyRelease:
-				t = Sys_XTimeToSysTime(event.xkey.time);
+				case KeyRelease:
+					t = Sys_XTimeToSysTime(event.xkey.time);
 #if 0
-				// bk001206 - handle key repeat w/o XAutRepatOn/Off
-				//            also: not done if console/menu is active.
-				// From Ryan's Fakk2.
-				// see game/q_shared.h, KEYCATCH_* . 0 == in 3d game.  
-				if (cls.keyCatchers == 0) {	// FIXME: KEYCATCH_NONE
-					if (repeated_press(&event) == qtrue)
-						continue;
-				}	// if
+					// bk001206 - handle key repeat w/o XAutRepatOn/Off
+					//            also: not done if console/menu is active.
+					// From Ryan's Fakk2.
+					// see game/q_shared.h, KEYCATCH_* . 0 == in 3d game.  
+					if (cls.keyCatchers == 0) {	// FIXME: KEYCATCH_NONE
+						if (repeated_press(&event) == qtrue)
+							continue;
+					}	// if
 #endif
-				XLateKey(&event.xkey, &key);
+					XLateKey(&event.xkey, &key);
 #ifdef _HARMATTAN_PLUS
 					if(Key_GetCatcher() == 0 && key == Key_GetKey("+attack"))
 					{
@@ -1237,138 +793,74 @@ static void HandleEvents(void)
 					}
 #endif
 
-				Com_QueueEvent(t, SE_KEY, key, qfalse, 0, NULL);
-				break;
+					Com_QueueEvent(t, SE_KEY, key, qfalse, 0, NULL);
+					break;
 
 #ifdef _HARMATTAN_UNUSED
-				//Now X11 ungrab mouse, all mouse events is GenericEvent of XInput2.
-			case MotionNotify:
-				t = Sys_XTimeToSysTime(event.xkey.time);
+					//Now X11 ungrab mouse, all mouse events is GenericEvent of XInput2.
+				case MotionNotify:
+					t = Sys_XTimeToSysTime(event.xkey.time);
 
-				dx = event.xmotion.x;
-				dy = event.xmotion.y;
+					dx = event.xmotion.x;
+					dy = event.xmotion.y;
 
-				if (!(Key_GetCatcher() & KEYCATCH_CGAME)) {
-					dx -= (glConfig.vidWidth - SCREEN_WIDTH) / 2;
-					dy -= (glConfig.vidHeight - SCREEN_HEIGHT) / 2;
-				}
+					if (!(Key_GetCatcher() & KEYCATCH_CGAME)) {
+						dx -= (glConfig.vidWidth - SCREEN_WIDTH) / 2;
+						dy -= (glConfig.vidHeight - SCREEN_HEIGHT) / 2;
+					}
 
-				dx -= x;
-				dy -= y;
+					dx -= x;
+					dy -= y;
 
 #if 0
-				Com_Printf ("KeyCatcher: %d\n", Key_GetCatcher());
+					Com_Printf ("KeyCatcher: %d\n", Key_GetCatcher());
 
-				Com_Printf ("MotionNotify: event.xmotion = (%d, %d) delta = (%d, %d)\n",
-						event.xmotion.x, event.xmotion.y,
-						dx, dy);
+					Com_Printf ("MotionNotify: event.xmotion = (%d, %d) delta = (%d, %d)\n",
+							event.xmotion.x, event.xmotion.y,
+							dx, dy);
 #endif
 
-				x = event.xmotion.x;
-				y = event.xmotion.y;
-				if (!(Key_GetCatcher() & KEYCATCH_CGAME)) {
-					x -= (glConfig.vidWidth - SCREEN_WIDTH) / 2;
-					y -= (glConfig.vidHeight - SCREEN_HEIGHT) / 2;
-				}
-				break;
-
-			case ButtonPress:
-			case ButtonRelease:
-				t = Sys_XTimeToSysTime(event.xkey.time);
-				motionPressed = (qboolean) (event.type == ButtonPress);
-				if (Key_GetCatcher() & (KEYCATCH_CGAME | KEYCATCH_UI)) {
-					Com_QueueEvent(t, SE_KEY, K_MOUSE1,
-							motionPressed, 0, NULL);
-				}
-				break;
-#endif
-
-			case CreateNotify:
-				win_x = event.xcreatewindow.x;
-				win_y = event.xcreatewindow.y;
-				break;
-
-			case ConfigureNotify:
-				win_x = event.xconfigure.x;
-				win_y = event.xconfigure.y;
-				break;
-
-#ifdef _HARMATTAN_PLUS
-				// Only XInput2 event
-			case GenericEvent:
-				if (event.xcookie.extension == xi_opcode) {
-					if (XGetEventData(dpy, &event.xcookie)) {
-						switch (((XIEvent *)event.xcookie.data) ->evtype) {
-							case XI_ButtonPress:
-							case XI_ButtonRelease:
-							case XI_Motion:
-#ifdef _HARMATTAN_UNUSED
-								motionPressed = (qboolean) (multi_mouses[0].ButtonState);
-#endif
-								xi_event = (XIDeviceEvent *)event.xcookie.data;
-								X11_XInput2_DispatchTouchDeviceEvent(xi_event);
-#ifdef _HARMATTAN_UNUSED
-								if(xi_event -> evtype == XI_Motion)
-								{
-									if(multi_mouses[0].MouseX < 108)
-										dx = 108;
-									else if(multi_mouses[0].MouseX > 747)// 854 - 640 = 214 / 2 = 107  854 - 107 = 747
-										dx = 747;
-									else
-										dx = multi_mouses[0].MouseX;
-										dy = multi_mouses[0].MouseY;
-
-										if (!(Key_GetCatcher() & KEYCATCH_CGAME)) {
-											dx -= (glConfig.vidWidth - SCREEN_WIDTH) / 2;
-											dy -= (glConfig.vidHeight - SCREEN_HEIGHT) / 2;
-										}
-
-										dx -= x;
-										dy -= y;
-
-									if(multi_mouses[0].MouseX < 108)
-										x = 108;
-									else if(multi_mouses[0].MouseX > 747)// 854 - 640 = 214 / 2 = 107  854 - 107 = 747
-										x = 747;
-									else
-										x = multi_mouses[0].MouseX;
-										y = multi_mouses[0].MouseY;
-										if (!(Key_GetCatcher() & KEYCATCH_CGAME)) {
-											x -= (glConfig.vidWidth - SCREEN_WIDTH) / 2;
-											y -= (glConfig.vidHeight - SCREEN_HEIGHT) / 2;
-										}
-								}
-								else if(xi_event -> evtype == XI_ButtonPress || xi_event -> evtype == XI_ButtonRelease)
-								{
-									//if(motionPressed != (qboolean) (multi_mouses[0].ButtonState))
-									{
-										int time = Sys_Milliseconds();
-										motionPressed = (qboolean)(multi_mouses[0].ButtonState);
-										if (Key_GetCatcher() & (KEYCATCH_CGAME | KEYCATCH_UI)) {
-											Com_QueueEvent(time, SE_KEY, K_MOUSE1, motionPressed, 0, NULL);
-										}
-									}
-								}
-								//LookupMultiButtonState();
-#endif
-								break;
-							case XI_DeviceChanged:
-								xi_changeevent = (XIDeviceChangedEvent *)event.xcookie.data;
-								X11_XInput2_DispatchDeviceChangedEvent(xi_changeevent);
-								break;
-							default:
-#ifdef DEBUG_XEVENTS
-								printf("Unhandled XInput2 event %d\n", xevent->evtype);
-#endif
-								break;
-						}
-						XFreeEventData(dpy, &event.xcookie);
+					x = event.xmotion.x;
+					y = event.xmotion.y;
+					if (!(Key_GetCatcher() & KEYCATCH_CGAME)) {
+						x -= (glConfig.vidWidth - SCREEN_WIDTH) / 2;
+						y -= (glConfig.vidHeight - SCREEN_HEIGHT) / 2;
 					}
-				}
-				break;
+					break;
+
+				case ButtonPress:
+				case ButtonRelease:
+					t = Sys_XTimeToSysTime(event.xkey.time);
+					motionPressed = (qboolean) (event.type == ButtonPress);
+					if (Key_GetCatcher() & (KEYCATCH_CGAME | KEYCATCH_UI)) {
+						Com_QueueEvent(t, SE_KEY, K_MOUSE1,
+								motionPressed, 0, NULL);
+					}
+					break;
 #endif
+
+				case CreateNotify:
+					win_x = event.xcreatewindow.x;
+					win_y = event.xcreatewindow.y;
+					break;
+
+				case ConfigureNotify:
+					win_x = event.xconfigure.x;
+					win_y = event.xconfigure.y;
+					break;
+
+					// Only XInput2 event
+#ifdef _HARMATTAN_3
+				case GenericEvent:
+					karinXI2Event(&event);
+					/*
+						 else
+						 printf("Unhandle XGenericEvent\n");
+						 */
+					break;
+#endif
+			}
 		}
-	}
 
 #ifdef _HARMATTAN_UNUSED
 	if (motionPressed) {
@@ -1481,12 +973,18 @@ void IN_DeactivateMouse(void)
 			uninstall_grabs();
 		mouse_active = qfalse;
 	}
+#ifdef _HARMATTAN_3
+	mx = my = 0;
+#endif
 }
 
 void IN_Frame(void)
 {
 	qboolean loading;
 
+#ifdef _HARMATTAN_3
+	karinGetClientState();
+#endif
 	HandleEvents();
 
 	// If not DISCONNECTED (main menu) or ACTIVE (in game), we're loading
@@ -1506,9 +1004,6 @@ void IN_Init(void)
 {
 	Com_DPrintf("\n------- Input Initialization -------\n");
 
-#ifdef _HARMATTAN
-	InitVirtualButton();
-#endif
 	// mouse variables
 	in_mouse = Cvar_Get("in_mouse", "1", CVAR_ARCHIVE);
 	in_nograb = Cvar_Get("in_nograb", "0", CVAR_ARCHIVE);

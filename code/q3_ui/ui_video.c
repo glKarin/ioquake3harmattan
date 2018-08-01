@@ -332,6 +332,11 @@ static const char *builtinResolutions[ ] =
 	"1600x1200",
 	"2048x1536",
 	"856x480 wide screen",
+#ifdef _HARMATTAN_3
+	"800x480 Maemo5 screen",
+	"854x480 Harmattan screen",
+	"854x376 Harmattan not fullscreen",
+#endif
 	NULL
 };
 

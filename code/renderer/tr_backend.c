@@ -21,6 +21,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include "tr_local.h"
 
+#ifdef _HARMATTAN_3
+#include "../karin/gl_vkb.h"
+#endif
+
 backEndData_t	*backEndData[SMP_FRAMES];
 backEndState_t	backEnd;
 
@@ -327,7 +331,7 @@ void GL_State( unsigned long stateBits )
 	//
 	// fill/line mode
 	//
-#if !defined(NOKIA)
+#if !defined(NOKIA) // OpenGL 多边形渲染模式 glPolygonMode
 	if ( diff & GLS_POLYMODE_LINE )
 	{
 		if ( stateBits & GLS_POLYMODE_LINE )
@@ -684,7 +688,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 		qglDepthRangef (0, 1);
 	}
 
-#if 0
+#ifdef _HARMATTAN_3
 	RB_DrawSun();
 #endif
 	// darken down any stencil shadows
@@ -1103,7 +1107,7 @@ const void	*RB_SwapBuffers( const void *data ) {
 
 	cmd = (const swapBuffersCommand_t *)data;
 
-#if !defined(NOKIA)
+#if !defined(NOKIA) // 从缓冲区读取模板值 GL_STENCIL_INDEX
 	// we measure overdraw by reading back the stencil buffer and
 	// counting up the number of increments that have happened
 	if ( r_measureOverdraw->integer ) {
@@ -1123,6 +1127,10 @@ const void	*RB_SwapBuffers( const void *data ) {
 	}
 #endif
 
+#ifdef _HARMATTAN_3
+	if(harm_usingVKB->integer)
+		karinRenderVKB();
+#endif
 
 	if ( !glState.finishCalled ) {
 		qglFinish();

@@ -74,11 +74,6 @@ intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, int arg4, 
 	case CG_EVENT_HANDLING:
 		CG_EventHandling(arg0);
 		return 0;
-#ifdef _HARMATTAN
-	case CG_UPDATE_VIRTUALBUTTON_STATE:
-		CG_UpdateVirtualButtonState(arg0, arg1);
-		return 0;
-#endif
 #ifdef _HARMATTAN_PLUS
 	case CG_AUTO_AIM:
 		OGC_DoAimbot();

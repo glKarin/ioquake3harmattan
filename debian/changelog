@@ -1,9 +1,22 @@
+ioquake3-touch (1558-6-harmattan2015fiora) unstable; urgency=low
+
+  * New virtual button layer. The virtual button layer is in client now, and not depends external library or qvm. So you can play multi-player game on other server, but don't using "Auto-Aim" button to fire, otherwise the server may be kick you.
+  * Enable touch-click on menu.
+  * Add virtual keyboard on console.
+  * Fixed lightmap-shadows effect of map on scene.
+  * Add "Space" virtual button on multiplayer-game menu.
+  * Add new 2 command: 
+  * harm_usingVKB: boolean(0 / 1) default is 1 - enable/disable virtual button layer.
+  * harm_swipeSens: float(greater than 0.0) default is 0.5 - swipe gesture sensitivity on virtual button layer.
+
+ -- Karin Zhao <beyondk2000@gmail.com>  Sun, 29 Jul 2018 09:09:18 +0800
+
 ioquake3-touch (1558-6-harmattan2015eva) unstable; urgency=low
 
   * Virtual buttons's function don't depend settings any more.
   * If you have N950 or external keyboard, you can change key binding and don't effect virtual buttons.
   * Add "Walk" button.
-  * Press "Fire" key (default CTRL) with keyboard can auto aim.
+  * Press "Fire" key with real keyboard can auto aim.
   * Change On-Screen Buttons layout.
   * New color scheme of buttons above menu.
 

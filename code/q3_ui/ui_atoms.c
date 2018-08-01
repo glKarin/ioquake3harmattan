@@ -27,119 +27,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 **********************************************************************/
 #include "ui_local.h"
 
-#ifdef _HARMATTAN_PLUS
-#include "../egl/egl_vkb.h"
-
-qboolean ui_vbstates[turncenter_vkb] = 
-{
-	qfalse, qfalse,
-	qfalse, qfalse, qfalse, qfalse
-};
-
-#define TRANSFORM_X_COORD(x) ((x) + VBW / 2)
-#define TRANSFORM_X_COORD_2(x) ((x) + VBW)
-#define TRANSFORM_Y_COORD(x) ((x) + 16)
-
-static VirtualButton ui_virtualbuttons[turncenter_vkb] = {
-	//base function
-	{
-		ENTER_X,
-		ENTER_Y,
-		TRANSFORM_X_COORD_2(ENTER_X),
-		TRANSFORM_Y_COORD(ENTER_Y),
-		"enter"
-	},
-	{
-		CANCEL_X,
-		CANCEL_Y,
-		TRANSFORM_X_COORD_2(CANCEL_X),
-		TRANSFORM_Y_COORD(CANCEL_Y),
-		"cancel"
-	},
-	//home end pageup pagedown center
-	{
-		TOUP_X,
-		TOUP_Y,
-		TRANSFORM_X_COORD(TOUP_X),
-		TRANSFORM_Y_COORD(TOUP_Y),
-		"up"
-	},
-	{
-		TODOWN_X,
-		TODOWN_Y,
-		TRANSFORM_X_COORD(TODOWN_X),
-		TRANSFORM_Y_COORD(TODOWN_Y),
-		"dn"
-	},
-	{
-		TOLEFT_X,
-		TOLEFT_Y,
-		TRANSFORM_X_COORD(TOLEFT_X),
-		TRANSFORM_Y_COORD(TOLEFT_Y),
-		"<<"
-	},
-	{
-		TORIGHT_X,
-		TORIGHT_Y,
-		TRANSFORM_X_COORD(TORIGHT_X),
-		TRANSFORM_Y_COORD(TORIGHT_Y),
-		">>"
-	}
-};
-
-void UI_UpdateVirtualButtonState(int i, qboolean pressed)
-{
-	if(i >= 0 && i < turncenter_vkb)
-		ui_vbstates[i] = pressed;
-}
-
-// 64        854
-// ---   =   ---  tx = 640 * x / 854
-// tx        640
-static inline void UI_DrawVirtualBottonItem(int index, const VirtualButton *b)
-{
-	//int len = UI_ProportionalStringWidth(s);
-	static const int two_width = VBW * 2;
-	static const int one_width = VBW;
-	static vec4_t virtualButtonTextColors[2] = {
-		{0.0f, 0.0f, 0.8f, 0.6f}, //release red text
-		{0.42f, 0.35f, 0.8f, 0.6f} //press white text
-	};
-	static vec4_t virtualButtonBackGroundColors[2] = {
-		{0.18f, 0.55f, 0.34f, 0.4f}, //release blue background
-		{1.0f, 0.65f, 0.0f, 0.4f} //press orange background
-	};
-
-	int pressed;
-	if(ui_vbstates[index])
-		pressed = 1;
-	else
-		pressed = 0;
-	int style = UI_CENTER;
-	size_t len = strlen(b -> text);
-	if(len > 2)
-		style |= UI_SMALLFONT;
-	else
-		style |= UI_BIGFONT;
-	if(len > 4)
-		UI_FillRect(b -> backgroundX, b -> backgroundY, two_width, VBW, virtualButtonBackGroundColors[pressed] );
-	//else if(len <= 4 && len > 3)
-		//UI_FillRect(b -> backgroundX, b -> backgroundY, one_and_half_width, VBW, virtualButtonBackGroundColors[pressed] );
-	else
-		UI_FillRect(b -> backgroundX, b -> backgroundY, one_width, VBW, virtualButtonBackGroundColors[pressed] );
-	UI_DrawProportionalString(b -> textX, b -> textY, b -> text, style, virtualButtonTextColors[pressed]);
-}
-
-static inline void UI_DrawVirtualBotton(void)
-{
-	int i;
-	for(i = 0; i < turncenter_vkb; i++)
-	{
-		UI_DrawVirtualBottonItem(i, &(ui_virtualbuttons[i]));
-	}
-}
-#endif
-
 uiStatic_t		uis;
 qboolean		m_entersound;		// after a frame, so caching won't disrupt the sound
 
@@ -1328,10 +1215,6 @@ void UI_Refresh( int realtime )
 		else
 			Menu_Draw( uis.activemenu );
 
-#ifdef _HARMATTAN_PLUS
-		UI_DrawVirtualBotton();
-#endif
-
 		if( uis.firstdraw ) {
 			UI_MouseEvent( 0, 0 );
 			uis.firstdraw = qfalse;
@@ -1376,3 +1259,65 @@ qboolean UI_CursorInRect (int x, int y, int width, int height)
 
 	return qtrue;
 }
+
+#ifdef _HARMATTAN_3
+void UI_TouchEvent( int ax, int ay )
+{
+	int				i;
+	menucommon_s*	m;
+	//printf(__FILE__ " UI_MouseEvent(%d,%d)\n", dx, dy);
+	if (!uis.activemenu)
+		return;
+
+	// update mouse screen position
+	uis.cursorx = ax;
+	if (uis.cursorx < 0)
+		uis.cursorx = 0;
+	else if (uis.cursorx > SCREEN_WIDTH)
+		uis.cursorx = SCREEN_WIDTH;
+
+	uis.cursory = ay;
+	if (uis.cursory < 0)
+		uis.cursory = 0;
+	else if (uis.cursory > SCREEN_HEIGHT)
+		uis.cursory = SCREEN_HEIGHT;
+
+	// region test the active menu items
+	for (i=0; i<uis.activemenu->nitems; i++)
+	{
+		m = (menucommon_s*)uis.activemenu->items[i];
+
+		if (m->flags & (QMF_GRAYED|QMF_INACTIVE))
+			continue;
+
+		if ((uis.cursorx < m->left) ||
+			(uis.cursorx > m->right) ||
+			(uis.cursory < m->top) ||
+			(uis.cursory > m->bottom))
+		{
+			// cursor out of item bounds
+			continue;
+		}
+
+		// set focus to item at cursor
+		if (uis.activemenu->cursor != i)
+		{
+			Menu_SetCursor( uis.activemenu, i );
+			((menucommon_s*)(uis.activemenu->items[uis.activemenu->cursor_prev]))->flags &= ~QMF_HASMOUSEFOCUS;
+
+			if ( !(((menucommon_s*)(uis.activemenu->items[uis.activemenu->cursor]))->flags & QMF_SILENT ) ) {
+				trap_S_StartLocalSound( menu_move_sound, CHAN_LOCAL_SOUND );
+			}
+		}
+
+		((menucommon_s*)(uis.activemenu->items[uis.activemenu->cursor]))->flags |= QMF_HASMOUSEFOCUS;
+		return;
+	}  
+
+	if (uis.activemenu->nitems > 0) {
+		// out of any region
+		((menucommon_s*)(uis.activemenu->items[uis.activemenu->cursor]))->flags &= ~QMF_HASMOUSEFOCUS;
+	}
+}
+#endif
+

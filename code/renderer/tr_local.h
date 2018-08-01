@@ -1115,6 +1115,10 @@ extern	cvar_t	*r_saveFontData;
 
 extern	cvar_t	*r_GLlibCoolDownMsec;
 
+#ifdef _HARMATTAN_3
+extern cvar_t	*harm_usingVKB;
+extern cvar_t	*harm_swipeSens;
+#endif
 //====================================================================
 
 float R_NoiseGet4f( float x, float y, float z, float t );

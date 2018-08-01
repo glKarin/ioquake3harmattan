@@ -1,0 +1,24 @@
+#!/bin/sh
+
+
+# This script is for booting default.
+
+Q3A_BIN="/usr/bin/ioquake3.arm"
+Q3A_SRV="/usr/bin/ioq3ded.arm"
+
+Q3A_EXEC="${Q3A_BIN} +set r_fullscreen 1 +set cg_shadows 2 +set r_ext_multitexture 1 +set r_allowExtensions 1 +set r_vertexLight 0 +set r_fastsky 0 +set r_stencilbits 8 +set cg_drawfps 1 +set r_drawSun 1 +set harm_usingVKB 1"
+
+# +set harm_swipeSens 0.5
+# +set r_depthbits 24 
+# +set cg_thirdPerson 0 
+# +set sv_pure 0 
+# +set vm_cgame 0 
+# +set vm_game 0 
+# +set vm_ui 0
+# +set com_standalone 1 
+
+echo "${Q3A_EXEC} $*"
+
+cd /home/user/baseq3
+${Q3A_EXEC} "$*"
+

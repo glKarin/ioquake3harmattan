@@ -1,0 +1,28 @@
+#!/bin/sh
+
+set -e
+
+USER_DIR="/home/user/baseq3"
+
+case "$1" in
+	remove|upgrade|deconfigure)
+		if [ -d ${USER_DIR} ]; then
+			Q3ALIB=`ls ${USER_DIR}/*.so 2> /dev/null || true`
+			for libso in ${Q3ALIB}; do
+				echo "rm -f ${libso}"
+				rm -f ${libso}
+			done
+		fi
+
+		echo "Quake III Arena remove done."
+		;;
+
+    failed-upgrade)
+    ;;
+
+    *)
+        echo "prerm called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+

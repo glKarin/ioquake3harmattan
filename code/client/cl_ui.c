@@ -1154,19 +1154,3 @@ qboolean UI_GameCommand( void ) {
 	return VM_Call( uivm, UI_CONSOLE_COMMAND, cls.realtime );
 }
 
-#ifdef _HARMATTAN_PLUS
-/*
-====================
-CL_UpdateMenuVirtualButtonState
-
-virtual buttons color feedback when pressed in menu
-====================
-*/
-qboolean CL_UpdateMenuVirtualButtonState(int index, qboolean pressed) {
-	if ( !uivm ) {
-		return qfalse;
-	}
-
-	return VM_Call( uivm, UI_UPDATE_VIRTUALBUTTON_STATE, index, pressed);
-}
-#endif

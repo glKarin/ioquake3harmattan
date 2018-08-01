@@ -235,18 +235,14 @@ typedef enum {
 	CG_MOUSE_EVENT,
 //	void	(*CG_MouseEvent)( int dx, int dy );
 
-#ifdef _HARMATTAN
-	CG_UPDATE_VIRTUALBUTTON_STATE,
-	// void (*CG_UpdateVirtualButtonState)(int index, qboolean pressed);
-#endif
+	CG_EVENT_HANDLING,
+//	void (*CG_EventHandling)(int type);
 
 #ifdef _HARMATTAN_PLUS
 	CG_AUTO_AIM,
 	//void (OGC_DoAimbot)(void);
 #endif
 
-	CG_EVENT_HANDLING
-//	void (*CG_EventHandling)(int type);
 } cgameExport_t;
 
 //----------------------------------------------

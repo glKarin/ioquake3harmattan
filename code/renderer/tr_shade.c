@@ -205,7 +205,7 @@ static void DrawMultitextured( shaderCommands_t *input, int stage ) {
 
 	GL_State( pStage->stateBits );
 
-#if !defined(NOKIA)
+#if !defined(NOKIA) // OpenGL 多边形渲染模式 glPolygonMode
 	// this is an ugly hack to work around a GeForce driver
 	// bug with multitexture and clip planes
 	if ( backEnd.viewParms.isPortal ) {

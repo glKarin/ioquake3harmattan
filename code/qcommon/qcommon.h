@@ -763,7 +763,10 @@ typedef enum {
 	SE_ACCEL,
 	SE_JOYSTICK_AXIS,	// evValue is an axis number and evValue2 is the current state (-127 to 127)
 	SE_CONSOLE,	// evPtr is a char*
-	SE_PACKET	// evPtr is a netadr_t followed by data bytes to evPtrLength
+	SE_PACKET,	// evPtr is a netadr_t followed by data bytes to evPtrLength
+#ifdef _HARMATTAN_3
+	SE_TOUCH, // absolute x/y coord
+#endif
 } sysEventType_t;
 
 typedef struct {
@@ -934,6 +937,9 @@ void CL_KeyEvent (int key, qboolean down, unsigned time);
 void CL_CharEvent( int key );
 // char events are for field typing, not game control
 
+#ifdef _HARMATTAN_3
+void CL_TouchEvent( int ax, int ay, int time );
+#endif
 void CL_MouseEvent( int dx, int dy, int time );
 void CL_AccelEvent( int dx, int dy, int time );
 

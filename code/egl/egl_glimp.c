@@ -15,6 +15,22 @@
 #include "../client/client.h"
 #include "../renderer/tr_local.h"
 
+#ifdef _HARMATTAN_3
+#include "../karin/m_xi2.h"
+#include "../karin/gl_vkb.h"
+#define UNSUPPORT(f) fprintf(stdout, #f" is not support for OpenGLES 1.1\n");
+
+static void karinPrintDev(void)
+{
+	char fmt_str[] = "[%s]: %s -> %s\n";
+	ri.Printf( PRINT_ALL, fmt_str, _HARMATTAN_APPNAME, "Ver", _HARMATTAN_VER);
+	ri.Printf( PRINT_ALL, fmt_str, _HARMATTAN_APPNAME, "Code", _HARMATTAN_DEVCODE);
+	ri.Printf( PRINT_ALL, fmt_str, _HARMATTAN_APPNAME, "Dev", _HARMATTAN_DEV);
+	ri.Printf( PRINT_ALL, fmt_str, _HARMATTAN_APPNAME, "Release", _HARMATTAN_RELEASE);
+	ri.Printf( PRINT_ALL, fmt_str, _HARMATTAN_APPNAME, "Desc", _HARMATTAN_DESC);
+}
+#endif
+
 Display *dpy = NULL;
 Window win = 0;
 EGLContext eglContext = NULL;
@@ -111,6 +127,7 @@ static void make_window(Display * dpy, Screen * scr, EGLDisplay eglDisplay,
 		EGL_BLUE_SIZE, 5,
 
 		EGL_DEPTH_SIZE, 8,
+		EGL_STENCIL_SIZE, 1,
 
 		EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
 		EGL_RENDERABLE_TYPE, EGL_OPENGL_ES_BIT,
@@ -124,49 +141,10 @@ static void make_window(Display * dpy, Screen * scr, EGLDisplay eglDisplay,
 				blackColour, blackColour);
 	XStoreName(dpy, win, WINDOW_CLASS_NAME);
 
-#ifdef _HARMATTAN_PLUS
-		int event, error;
-		if (XQueryExtension(dpy, "XInputExtension", &xi_opcode, &event, &error)) {
-			int major = 2;
-			int minor = 0;
-			if (XIQueryVersion(dpy, &major, &minor) == Success) {
-				ri.Printf(PRINT_DEVELOPER, "XInput2 library version is %d.%d\n", major, minor);
-			}
-		}
-			/* Find the master pointer and keep a reference to it. */
-			int device_count = 0;
-			XIDeviceInfo *devices = XIQueryDevice(dpy, XIAllMasterDevices, &device_count);
-			if (devices) {
-				for (i = 0; i < device_count; i++) {
-					if (devices[i].use == XIMasterPointer) {
-						X11_XInput2_SetMasterPointer(devices[i].deviceid);
-						break;
-					}
-				}
-				XIFreeDeviceInfo(devices);
-			}
-			if (!xi_master) {
-				/* No master pointer found? Broken XInput configuration. */
-				ri.Printf(PRINT_ALL, "No master pointer found? Broken XInput configuration.");
-			}
-
-			XIEventMask mask;
-			unsigned char bitmask[XIMaskLen(XI_LASTEVENT)] = { 0 };
-			mask.deviceid = XIAllMasterDevices;
-			mask.mask = bitmask;
-			mask.mask_len = sizeof(bitmask);
-
-			/* For now, just capture mouse events. */
-			XISetMask(bitmask, XI_ButtonPress);
-			XISetMask(bitmask, XI_ButtonRelease);
-			XISetMask(bitmask, XI_Motion);
-			/* As well as new device events. */
-			XISetMask(bitmask, XI_DeviceChanged);
-
-			XISelectEvents(dpy, win, &mask, 1);
-
-			/* We are no longer interested in the core protocol events. */
+#ifdef _HARMATTAN_3
+	karinInitXI2();
 #endif
+	
 	XSelectInput(dpy, win, X_MASK);
 
 	if (!(XResult = XGetWindowAttributes(dpy, win, &WinAttr)))
@@ -177,6 +155,13 @@ static void make_window(Display * dpy, Screen * scr, EGLDisplay eglDisplay,
 	GLimp_DisableComposition();
 
 	XFlush(dpy);
+
+#ifdef _HARMATTAN_3
+	karinXI2Atom();
+
+	karinSetMultiMouseEventFunction(karinXI2MouseEvent);
+	karinSetMultiMotionEventFunction(karinXI2MotionEvent);
+#endif
 
 	if (!eglGetConfigs(eglDisplay, configs, MAX_NUM_CONFIGS, &config_count))
 		GLimp_HandleError();
@@ -203,6 +188,29 @@ static void make_window(Display * dpy, Screen * scr, EGLDisplay eglDisplay,
 	if (!eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext))
 		GLimp_HandleError();
 
+#ifdef _HARMATTAN_3
+	int stencil_bits = 0;
+	int depth_bits = 0;
+	int red_bits = 0;
+	int green_bits = 0;
+	int blue_bits = 0;
+	if(eglGetConfigAttrib(eglDisplay, configs[i], EGL_STENCIL_SIZE, &stencil_bits))
+	{
+		if(stencil_bits >= 1) {
+			glConfig.stencilBits = stencil_bits;
+		}
+	}
+	if(eglGetConfigAttrib(eglDisplay, configs[i], EGL_DEPTH_SIZE, &depth_bits))
+	{
+		if(depth_bits >= 1) {
+			glConfig.depthBits = depth_bits;
+		}
+	}
+		eglGetConfigAttrib(eglDisplay, configs[i], EGL_RED_SIZE, &red_bits);
+		eglGetConfigAttrib(eglDisplay, configs[i], EGL_GREEN_SIZE, &green_bits);
+		eglGetConfigAttrib(eglDisplay, configs[i], EGL_BLUE_SIZE, &blue_bits);
+		glConfig.colorBits = red_bits + green_bits + blue_bits;
+#endif
 	*winRet = eglSurface;
 	*ctxRet = eglContext;
 }
@@ -420,24 +428,30 @@ void GLimp_Init(void)
 	if (!eglInitialize(eglDisplay, &major, &minor))
 		GLimp_HandleError();
 
-#ifdef _HARMATTAN_PLUS
-    XInternAtoms(dpy, (char**) atom_names, ATOM_COUNT, False, atoms);
-		//initialize XInput2 atoms.
-#endif
-
 	make_window(dpy, screen, eglDisplay, &eglSurface, &eglContext);
 
 	XMoveResizeWindow(dpy, win, 0, 0, WidthOfScreen(screen),
-			  HeightOfScreen(screen));
+#ifdef _HARMATTAN_3
+			  r_fullscreen->integer ? HeightOfScreen(screen) : HARMATTAN_NO_FULL_HEIGHT
+#else
+			  HeightOfScreen(screen)
+#endif
+				);
+
 
 	glConfig.isFullscreen = r_fullscreen->integer;
 	glConfig.vidWidth = WidthOfScreen(screen);
+#ifdef _HARMATTAN_3
+	glConfig.vidHeight = r_fullscreen->integer ? HeightOfScreen(screen) : HARMATTAN_NO_FULL_HEIGHT;
+#else
 	glConfig.vidHeight = HeightOfScreen(screen);
+#endif
 	glConfig.windowAspect = (float)glConfig.vidWidth / glConfig.vidHeight;
 	// FIXME
 	//glConfig.colorBits = 0
 	//glConfig.stencilBits = 0;
 	//glConfig.depthBits = 0;
+	
 	glConfig.textureCompression = TC_NONE;
 
 	// This values force the UI to disable driver selection
@@ -464,6 +478,14 @@ void GLimp_Init(void)
 
 	IN_Init( );
 
+#ifdef _HARMATTAN_3
+	karinPrintDev();
+
+	karinNewVKB(0.0, 0.0, 0.0, glConfig.vidWidth, glConfig.vidHeight);
+	ri.Printf(PRINT_ALL, "[karin]: Load virtual button layer ... ");
+	ri.Printf(PRINT_ALL, "Done\n");
+#endif
+
 	ri.Printf(PRINT_ALL, "------------------\n");
 }
 
@@ -478,12 +500,21 @@ void GLimp_EndFrame(void)
 		eglSwapBuffers(eglDisplay, eglSurface);
 	}
 
-	XForceScreenSaver(dpy, ScreenSaverReset);
+#ifdef _HARMATTAN_3
+	if(dpy)
+#endif
+		XForceScreenSaver(dpy, ScreenSaverReset);
 
 }
 
 void GLimp_Shutdown(void)
 {
+#ifdef _HARMATTAN_3
+	ri.Printf(PRINT_ALL, "[karin]: Destroy virtual button layer ... ");
+	karinDeleteVKB();
+	ri.Printf(PRINT_ALL, "Done\n");
+#endif
+
 	IN_Shutdown();
 
 	eglDestroyContext(eglDisplay, eglContext);
@@ -493,27 +524,46 @@ void GLimp_Shutdown(void)
 
 	XDestroyWindow(dpy, win);
 	XCloseDisplay(dpy);
+
+#ifdef _HARMATTAN_3
+	dpy = NULL;
+#endif
 }
 
 #if 1
 void qglArrayElement(GLint i)
 {
+#ifndef _HARMATTAN_3
+	//UNSUPPORT(glAreayElement);
+#endif
 }
 
 void qglCallList(GLuint list)
 {
+#ifndef _HARMATTAN_3
+	 //UNSUPPORT(glCallList);
+#endif
 }
 
 void qglDrawBuffer(GLenum mode)
 {
+#ifndef _HARMATTAN_3
+	 //UNSUPPORT(glDrawBuffer);
+#endif
 }
 
 void qglLockArrays(GLint i, GLsizei size)
 {
+#ifndef _HARMATTAN_3
+	 //UNSUPPORT(glLockArrays);
+#endif
 }
 
 void qglUnlockArrays(void)
 {
+#ifndef _HARMATTAN_3
+	 //UNSUPPORT(glUnlockArrays);
+#endif
 }
 #endif
 

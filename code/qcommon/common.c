@@ -2235,6 +2235,11 @@ int Com_EventLoop( void ) {
 		case SE_ACCEL:
 			CL_AccelEvent( ev.evValue, ev.evValue2, ev.evTime );
 			break;
+#ifdef _HARMATTAN_3
+		case SE_TOUCH:
+			CL_TouchEvent( ev.evValue, ev.evValue2, ev.evTime );
+			break;
+#endif
 		case SE_JOYSTICK_AXIS:
 			CL_JoystickEvent( ev.evValue, ev.evValue2, ev.evTime );
 			break;

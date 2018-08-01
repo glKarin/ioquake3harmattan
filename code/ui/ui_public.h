@@ -182,14 +182,17 @@ typedef enum {
 
 	UI_DRAW_CONNECT_SCREEN,
 //	void	UI_DrawConnectScreen( qboolean overlay );
-#ifdef _HARMATTAN_PLUS
-	UI_UPDATE_VIRTUALBUTTON_STATE,
-	// void (*CL_UpdateVirtualButtonState)(int index, qboolean pressed);
-#endif
-	UI_HASUNIQUECDKEY
+
+	UI_HASUNIQUECDKEY,
 // if !overlay, the background will be drawn, otherwise it will be
 // overlayed over whatever the cgame has drawn.
 // a GetClientState syscall will be made to get the current strings
+
+#ifdef _HARMATTAN_3
+	UI_TOUCH_EVENT,
+	// void UI_TouchEvent(int ax, int ay);
+#endif
+
 } uiExport_t;
 
 #endif

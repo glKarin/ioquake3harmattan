@@ -5,38 +5,65 @@ set -e
 
 USER_DIR="/home/user/baseq3"
 LIBS_DIR="/usr/lib/ioquake3-touch"
-MISC_DIR="/usr/share/ioquake3-touch/misc"
+MISC_DIR="/usr/lib/ioquake3-touch/misc"
+Q3A_SH="Quake_III_Arena"
 
 if [ "$1" = "configure" ]; then
 	# create user ioquake3 directory
-	if [ ! -d $USER_DIR ]; then
-		devel-su user -c "mkdir $USER_DIR"
-		echo "mkdir $USER_DIR"
-		if [ x$? != "x0" ]; then
-			echo "WARNNING -> Create ioquake3 directory for user failed! Exiting..."
+	if [ ! -d ${USER_DIR} ]; then
+		devel-su user -c "mkdir ${USER_DIR}"
+		echo "mkdir ${USER_DIR}"
+		if [ "x$?" != "x0" ]; then
+			echo "[Warning]: Create ioquake3 directory for user failed! Exiting..."
 			exit 1;
 		fi
 	fi
 	# symbols link libraries to user ioquake3 directory
-	QLIBS=`ls $LIBS_DIR`
-	for libso in $QLIBS; do
-		if [ -e $USER_DIR/$libso ]; then
-			devel-su user -c "rm -f $USER_DIR/$libso"
-			echo "rm -f $USER_DIR/$libso"
+	QLIBS=`ls ${LIBS_DIR}`
+	for libso in ${QLIBS}; do
+		SO=`echo $libso | grep "\.so$" || true 2> /dev/null`
+		if [ "x${SO}" != "x" ]; then
+			if [ -e ${USER_DIR}/${SO} ]; then
+				rm -f ${USER_DIR}/${SO}
+				echo "rm -f ${USER_DIR}/${SO}"
+			fi
+			devel-su user -c "ln -s ${LIBS_DIR}/${SO} ${USER_DIR}"
+			echo "ln -s ${LIBS_DIR}/${SO} ${USER_DIR}"
 		fi
-			devel-su user -c "ln -s $LIBS_DIR/$libso $USER_DIR"
-			echo "ln -s $LIBS_DIR/$libso $USER_DIR"
 	done
 	#copy ioquake3 init config file to user directory	
-	QCFGS=`ls $MISC_DIR`
-	for cfg in $QCFGS; do
-		if [ -e $USER_DIR/$cfg ]; then
-			devel-su user -c "rm -f $USER_DIR/$cfg"
-			echo "rm -f $USER_DIR/$cfg"
+	QCFGS=`ls ${MISC_DIR}`
+	for cfg in ${QCFGS}; do
+		cfg_exists="0"
+		if [ -e ${USER_DIR}/${cfg} ]; then
+			cfg_exists="1";
+			if [ "x${cfg}" = "xq3config.cfg" ]; then
+				rm -f ${USER_DIR}/${cfg}
+				cfg_exists="0";
+				echo "rm -f ${USER_DIR}/${cfg}"
+			fi
 		fi
-			devel-su user -c "cp $MISC_DIR/$cfg $USER_DIR"
-			echo "cp $MISC_DIR$cfg $USER_DIR"
+		if [ "x${cfg_exists}" = "x0" ]; then
+			devel-su user -c "cp ${MISC_DIR}/${cfg} ${USER_DIR}"
+			echo "cp ${MISC_DIR}/${cfg} ${USER_DIR}"
+		fi
 	done
+
+	sh_exists="0"
+	if [ -e ${USER_DIR}/${Q3A_SH} ]; then
+		sh_exists="1";
+		if [ ! -x ${USER_DIR}/${Q3A_SH} ]; then
+			rm -f ${USER_DIR}/${Q3A_SH}
+			echo "rm -f ${USER_DIR}/${Q3A_SH}"
+			sh_exists="0"
+		fi
+	fi
+	if [ "x${sh_exists}" = "x0" ]; then
+		devel-su user -c "cp ${LIBS_DIR}/${Q3A_SH} ${USER_DIR}"
+		echo "cp ${LIBS_DIR}/${Q3A_SH} ${USER_DIR}"
+	fi
+
+	echo "Quake III Arena for Harmattan configure done."
 fi
 
 #define END

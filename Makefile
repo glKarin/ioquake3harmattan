@@ -177,6 +177,8 @@ NSISDIR=misc/nsis
 SDLHDIR=$(MOUNT_DIR)/SDL12
 LIBSDIR=$(MOUNT_DIR)/libs
 TEMPDIR=/tmp
+KARIN_DIR=$(MOUNT_DIR)/karin
+RESC_DIR=resc
 
 # set PKG_CONFIG_PATH to influence this, e.g.
 # PKG_CONFIG_PATH=/opt/cross/i386-mingw32msvc/lib/pkgconfig
@@ -294,8 +296,26 @@ ifeq ($(PLATFORM),linux)
     OPTIMIZE += -mtune=ultrasparc3 -mv8plus
     HAVE_VM_COMPILED=true
   endif
+  ifeq ($(ARCH),armv7l)
+  	ARCH=arm
+  endif
   ifeq ($(ARCH),arm)
-    BASE_CFLAGS += -DNOKIA -D_HARMATTAN -D_DBG -D_HARMATTAN_PLUS #-D_HARMATTAN_UNUSED
+    BASE_CFLAGS += -DNOKIA \
+									 -D_HARMATTAN -D_HARMATTAN_PLUS \
+									 -D_HARMATTAN_3 -D_HARMATTAN_3_EXT \
+									 -D_HARMATTAN_PKG='\"ioquake3-touch\"' \
+									 -D_HARMATTAN_VER='\"harmattan2015\"' \
+									 -D_HARMATTAN_APPNAME='\"ioquake III Harmattan\"' \
+									 -D_HARMATTAN_DEV='\"karin\"' \
+									 -D_HARMATTAN_DEVCODE='\"Fiora\"' \
+									 -D_HARMATTAN_DESC='\"Quake III Arena + Touch for OpenGLES 1.1 on MeeGo Harmattan\"' \
+									 -D_HARMATTAN_RELEASE='\"20150720\"' \
+									 -D_HARMATTAN_TMO='\"Karin_Zhao\"' \
+									 -D_HARMATTAN_PATCH='\"6\"' \
+									 -D_HARMATTAN_RESC='\"/usr/lib/ioquake3-touch/resc/\"'
+		# -D_DBG 
+		# -D_HARMATTAN_UNUSED
+
     BASE_CFLAGS += -I/usr/include/SDL
     OPTIMIZE += -ffast-math -march=armv7-a -mcpu=cortex-a8 -mfpu=neon #-mthumb
   endif
@@ -1053,6 +1073,7 @@ makedirs:
 	@if [ ! -d $(B)/tools/rcc ];then $(MKDIR) $(B)/tools/rcc;fi
 	@if [ ! -d $(B)/tools/cpp ];then $(MKDIR) $(B)/tools/cpp;fi
 	@if [ ! -d $(B)/tools/lburg ];then $(MKDIR) $(B)/tools/lburg;fi
+	@if [ ! -d $(B)/karin ];then $(MKDIR) $(B)/karin;fi
 
 #############################################################################
 # QVM BUILD TOOLS
@@ -1497,10 +1518,16 @@ Q3POBJ += \
 Q3POBJ_SMP += \
   $(Q3POBJ)
 
-$(B)/ioquake3.$(ARCH)$(BINEXT): $(Q3OBJ) $(Q3POBJ) $(LIBSDLMAIN)
+KARIN_OBJ += \
+	$(B)/karin/gl_vkb1.o \
+	$(B)/karin/vkb.o \
+	$(B)/karin/q3_png.o \
+	$(B)/karin/m_xi2.o
+
+$(B)/ioquake3.$(ARCH)$(BINEXT): $(Q3OBJ) $(Q3POBJ) $(LIBSDLMAIN) $(KARIN_OBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CLIENT_CFLAGS) $(CFLAGS) $(CLIENT_LDFLAGS) $(LDFLAGS) \
-		-o $@ $(Q3OBJ) $(Q3POBJ) \
+		-o $@ $(Q3OBJ) $(Q3POBJ) $(KARIN_OBJ)\
 		$(LIBSDLMAIN) $(CLIENT_LIBS) $(LIBS)
 
 $(B)/ioquake3-smp.$(ARCH)$(BINEXT): $(Q3OBJ) $(Q3POBJ_SMP) $(LIBSDLMAIN)
@@ -1884,6 +1911,7 @@ Q3UIOBJ_ = \
   $(B)/baseq3/ui/ui_team.o \
   $(B)/baseq3/ui/ui_teamorders.o \
   $(B)/baseq3/ui/ui_video.o \
+  $(B)/baseq3/ui/ui_harm.o \
   \
   $(B)/baseq3/qcommon/q_math.o \
   $(B)/baseq3/qcommon/q_shared.o
@@ -1964,6 +1992,9 @@ $(B)/clientsmp/%.o: $(SDLDIR)/%.c
 	$(DO_SMP_CC)
 
 $(B)/client/%.o: $(EGLDIR)/%.c
+	$(DO_CC)
+
+$(B)/karin/%.o: $(KARIN_DIR)/%.c
 	$(DO_CC)
 
 $(B)/clientsmp/%.o: $(EGLDIR)/%.c
@@ -2095,6 +2126,7 @@ $(B)/missionpack/qcommon/%.asm: $(CMDIR)/%.c $(Q3LCC)
 #############################################################################
 
 OBJ = $(Q3OBJ) $(Q3POBJ) $(Q3POBJ_SMP) $(Q3DOBJ) \
+	$(KARIN_OBJ) \
   $(MPGOBJ) $(Q3GOBJ) $(Q3CGOBJ) $(MPCGOBJ) $(Q3UIOBJ) $(MPUIOBJ) \
   $(MPGVMOBJ) $(Q3GVMOBJ) $(Q3CGVMOBJ) $(MPCGVMOBJ) $(Q3UIVMOBJ) $(MPUIVMOBJ)
 TOOLSOBJ = $(LBURGOBJ) $(Q3CPPOBJ) $(Q3RCCOBJ) $(Q3LCCOBJ) $(Q3ASMOBJ)

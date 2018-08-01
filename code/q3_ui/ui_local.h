@@ -559,6 +559,9 @@ extern void			UI_Init( void );
 extern void			UI_Shutdown( void );
 extern void			UI_KeyEvent( int key, int down );
 extern void			UI_MouseEvent( int dx, int dy );
+#ifdef _HARMATTAN_3
+extern void UI_TouchEvent( int ax, int ay );
+#endif
 extern void			UI_Refresh( int realtime );
 extern qboolean		UI_ConsoleCommand( int realTime );
 extern float		UI_ClampCvar( float min, float max, float value );
@@ -799,8 +802,12 @@ void UI_SignupMenu( void );
 void RankStatus_Cache( void );
 void UI_RankStatusMenu( void );
 
-#ifdef _HARMATTAN_PLUS
-void UI_UpdateVirtualButtonState(int index, qboolean pressed);
+#ifdef _HARMATTAN_3_EXT
+//
+// ui_harm.c
+//
+extern void UI_HarmMenu( void );
+extern void UI_HarmMenu_Cache( void );
 #endif
 
 #endif

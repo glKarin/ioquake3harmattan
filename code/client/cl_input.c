@@ -373,11 +373,9 @@ void CL_MouseEvent( int dx, int dy, int time ) {
 		VM_Call( uivm, UI_MOUSE_EVENT, dx, dy );
 	} else if (Key_GetCatcher( ) & KEYCATCH_CGAME) {
 		VM_Call (cgvm, CG_MOUSE_EVENT, dx, dy);
-#ifdef _HARMATTAN_UNUSED
 	} else {
 		cl.mouseDx[cl.mouseIndex] += dx * cl_sensitivity->value;
 		cl.mouseDy[cl.mouseIndex] += dy * cl_sensitivity->value;
-#endif
 	}
 }
 
@@ -1068,3 +1066,19 @@ void CL_InitInput( void ) {
 	cl_nodelta = Cvar_Get ("cl_nodelta", "0", 0);
 	cl_debugMove = Cvar_Get ("cl_debugMove", "0", 0);
 }
+
+#ifdef _HARMATTAN_3
+/*
+=================
+CL_TouchEvent
+=================
+*/
+void CL_TouchEvent( int ax, int ay, int time ) {
+	if ( Key_GetCatcher( ) & KEYCATCH_UI ) {
+		VM_Call( uivm, UI_TOUCH_EVENT, ax, ay );
+	} else if (Key_GetCatcher( ) & KEYCATCH_CGAME) {
+		//VM_Call (cgvm, CG_MOUSE_EVENT, dx, dy);
+	}
+}
+#endif
+

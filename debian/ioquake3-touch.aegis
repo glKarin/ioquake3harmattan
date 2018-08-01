@@ -8,4 +8,8 @@
      Modify the file or remove the checksum to disable this functionality. -->
 <!-- modified-checksum:bfe2d31dedc37ce4866e70cfb9cd92f1 -->
 <aegis>
+	<request policy="add">
+		<for path="/usr/bin/ioquake3.arm" />
+		<for path="/usr/bin/ioq3ded.arm" />
+	</request>
 </aegis>

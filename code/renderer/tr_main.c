@@ -1314,30 +1314,67 @@ R_DebugPolygon
 ================
 */
 void R_DebugPolygon( int color, int numPoints, float *points ) {
-#if 0
+#ifdef _HARMATTAN_3
+#define _COPY_VERTEX3(d, s, i) \
+	(d)[(i) * 3] = (s)[(i) * 3]; \
+	(d)[(i) * 3 + 1] = (s)[(i) * 3 + 1]; \
+	(d)[(i) * 3 + 2] = (s)[(i) * 3 + 2];
+	if(numPoints <= 0)
+		return;
+
 	int		i;
+	GLfloat *vs;
+	GLboolean vertex_array;
+	GLboolean texcoord_array;
+	GLboolean color_array;
+
+	vertex_array = qglIsEnabled(GL_VERTEX_ARRAY);
+	texcoord_array = qglIsEnabled(GL_TEXTURE_COORD_ARRAY);
+	color_array = qglIsEnabled(GL_COLOR_ARRAY);
+
+	if(color_array)
+		qglDisableClientState(GL_COLOR_ARRAY);
+	if(texcoord_array)
+		qglDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	if(!vertex_array)
+		qglEnableClientState(GL_VERTEX_ARRAY);
 
 	GL_State( GLS_DEPTHMASK_TRUE | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE );
 
 	// draw solid shade
 
-	qglColor3f( color&1, (color>>1)&1, (color>>2)&1 );
-	qglBegin( GL_POLYGON );
+	vs = calloc(numPoints * 3, sizeof(GLfloat));
+	glColor4f( color&1, (color>>1)&1, (color>>2)&1, 1.0);
+	//qglBegin( GL_POLYGON );
 	for ( i = 0 ; i < numPoints ; i++ ) {
-		qglVertex3fv( points + i * 3 );
+		_COPY_VERTEX3(vs, points, i)
 	}
-	qglEnd();
+
+	qglVertexPointer(3, GL_FLOAT, 0, vs);
+	qglDrawArrays(GL_TRIANGLE_FAN, 0, numPoints);
 
 	// draw wireframe outline
 	GL_State( GLS_POLYMODE_LINE | GLS_DEPTHMASK_TRUE | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE );
 	qglDepthRangef( 0, 0 );
-	qglColor3f( 1, 1, 1 );
-	qglBegin( GL_POLYGON );
+	glColor4f( 1, 1, 1, 1 );
+	//qglBegin( GL_POLYGON );
 	for ( i = 0 ; i < numPoints ; i++ ) {
-		qglVertex3fv( points + i * 3 );
+		_COPY_VERTEX3(vs, points, i)
 	}
-	qglEnd();
+
+	qglVertexPointer(3, GL_FLOAT, 0, vs);
+	qglDrawArrays(GL_TRIANGLE_FAN, 0, numPoints);
+
 	qglDepthRangef( 0, 1 );
+
+	if(!vertex_array)
+		qglDisableClientState(GL_VERTEX_ARRAY);
+	if(texcoord_array)
+		qglEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	if(color_array)
+		qglEnableClientState(GL_COLOR_ARRAY);
+	free(vs);
+#undef _COPY_VERTEX3
 #endif
 }
 

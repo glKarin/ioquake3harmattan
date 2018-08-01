@@ -89,6 +89,43 @@ void R_RenderShadowEdges( void ) {
 		qglVertex3fv( tess.xyz[ i1 + tess.numVertexes ] );
 		qglEnd();
 	}
+#elif defined(_HARMATTAN_UNUSED)
+#define _COPY_VEC3(d, s, i) \
+	{ \
+	(d)[(i) * 3] = s[0]; \
+	(d)[(i) * 3 + 1] = s[1]; \
+	(d)[(i) * 3 + 2] = s[2]; \
+	}
+	int		numTris;
+
+	// dumb way -- render every triangle's edges
+	numTris = tess.numIndexes / 3;
+
+	GLfloat vs[8 * 3];
+	for ( i = 0 ; i < numTris ; i++ ) {
+		int		i1, i2, i3;
+
+		if ( !facing[i] ) {
+			continue;
+		}
+
+		i1 = tess.indexes[ i*3 + 0 ];
+		i2 = tess.indexes[ i*3 + 1 ];
+		i3 = tess.indexes[ i*3 + 2 ];
+
+		//qglBegin( GL_TRIANGLE_STRIP );
+		_COPY_VEC3( vs, tess.xyz[ i1 ], 0 );
+		_COPY_VEC3( vs, tess.xyz[ i1 + tess.numVertexes ], 1 );
+		_COPY_VEC3( vs, tess.xyz[ i2 ], 2 );
+		_COPY_VEC3( vs, tess.xyz[ i2 + tess.numVertexes ], 3 );
+		_COPY_VEC3( vs, tess.xyz[ i3 ], 4 );
+		_COPY_VEC3( vs, tess.xyz[ i3 + tess.numVertexes ], 5 );
+		_COPY_VEC3( vs, tess.xyz[ i1 ], 6 );
+		_COPY_VEC3( vs, tess.xyz[ i1 + tess.numVertexes ], 7 );
+		qglVertexPointer(3, GL_FLOAT, 0, vs);
+		qglDrawArrays(GL_TRIANGLE_STRIP, 0, 8);
+	}
+#undef _COPY_VEC3
 #else
 	int		c, c2;
 	int		j, k;

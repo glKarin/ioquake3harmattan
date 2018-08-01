@@ -1112,24 +1112,6 @@ void CL_SetCGameTime( void ) {
 }
 
 
-#ifdef _HARMATTAN
-/*
-====================
-CL_UpdateVirtualButtonState
-
-virtual buttons color feedback when pressed in game
-====================
-*/
-qboolean CL_UpdateVirtualButtonState(int index, qboolean pressed) {
-	if ( !cgvm ) {
-		return qfalse;
-	}
-
-	return VM_Call( cgvm, CG_UPDATE_VIRTUALBUTTON_STATE, index, pressed);
-}
-
-#endif
-
 #ifdef _HARMATTAN_PLUS
 /*
 ====================

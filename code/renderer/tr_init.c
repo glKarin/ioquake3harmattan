@@ -23,6 +23,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "tr_local.h"
 
+#ifdef _HARMATTAN_3
+#include "../karin/vkb.h"
+#endif
+
 glconfig_t  glConfig;
 qboolean    textureFilterAnisotropic = qfalse;
 int         maxAnisotropy = 0;
@@ -159,6 +163,11 @@ int		max_polys;
 cvar_t	*r_maxpolyverts;
 int		max_polyverts;
 
+#ifdef _HARMATTAN_3
+cvar_t	*harm_usingVKB;
+cvar_t	*harm_swipeSens;
+#endif
+
 void (APIENTRY * qglMultiTexCoord2fARB) (GLenum texture, GLfloat s, GLfloat t);
 void (APIENTRY * qglActiveTextureARB) (GLenum texture);
 void (APIENTRY * qglClientActiveTextureARB) (GLenum texture);
@@ -286,7 +295,12 @@ vidmode_t r_vidModes[] =
 	{ "Mode  8: 1280x1024",		1280,	1024,	1 },
 	{ "Mode  9: 1600x1200",		1600,	1200,	1 },
 	{ "Mode 10: 2048x1536",		2048,	1536,	1 },
-	{ "Mode 11: 856x480 (wide)",856,	480,	1 }
+	{ "Mode 11: 856x480 (wide)",856,	480,	1 },
+#ifdef _HARMATTAN_3
+	{ "Mode 12: 800x480 (Maemo5)", FREMANTLE_WIDTH,	FREMANTLE_HEIGHT,	1 },
+	{ "Mode 13: 854x480 (Harmattan)", HARMATTAN_WIDTH,	HARMATTAN_HEIGHT,	1 },
+	{ "Mode 14: 854x376 (Harmattan not fullscreen)", HARMATTAN_WIDTH,	HARMATTAN_NO_FULL_HEIGHT,	1 },
+#endif
 };
 static int	s_numVidModes = ( sizeof( r_vidModes ) / sizeof( r_vidModes[0] ) );
 
@@ -774,7 +788,7 @@ void GL_SetDefaultState( void )
 	//
 	glState.glStateBits = GLS_DEPTHTEST_DISABLE | GLS_DEPTHMASK_TRUE;
 
-#if !defined(NOKIA)
+#if !defined(NOKIA) // OpenGL 多边形渲染模式 glPolygonMode
 	qglPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
 #endif
 	qglDepthMask( GL_TRUE );
@@ -1017,6 +1031,10 @@ void R_Register( void )
 
 	r_maxpolys = ri.Cvar_Get( "r_maxpolys", va("%d", MAX_POLYS), 0);
 	r_maxpolyverts = ri.Cvar_Get( "r_maxpolyverts", va("%d", MAX_POLYVERTS), 0);
+#ifdef _HARMATTAN_3
+	harm_usingVKB = ri.Cvar_Get( "harm_usingVKB", "1", CVAR_ARCHIVE );
+	harm_swipeSens = ri.Cvar_Get( "harm_swipeSens", "0.5", CVAR_ARCHIVE );
+#endif
 
 	// make sure all the commands added here are also
 	// removed in R_Shutdown
@@ -1165,6 +1183,13 @@ void RE_Shutdown( qboolean destroyWindow ) {
 	// shut down platform specific OpenGL stuff
 	if ( destroyWindow ) {
 		GLimp_Shutdown();
+#ifdef _HARMATTAN_3
+		Com_Memset(&glConfig, 0, sizeof(glConfig));
+		textureFilterAnisotropic = qfalse;
+		maxAnisotropy = 0;
+		displayAspect = 0.0f;
+		Com_Memset(&glState, 0, sizeof(glState));
+#endif
 	}
 
 	tr.registered = qfalse;

@@ -593,9 +593,6 @@ void CL_SetCGameTime( void );
 void CL_FirstSnapshot( void );
 void CL_ShaderStateChanged(void);
 
-#ifdef _HARMATTAN
-qboolean CL_UpdateVirtualButtonState(int index, qboolean pressed);
-#endif
 #ifdef _HARMATTAN_PLUS
 qboolean CL_AutoAim(void);
 #endif
@@ -609,10 +606,6 @@ int Key_GetCatcher( void );
 void Key_SetCatcher( int catcher );
 void LAN_LoadCachedServers( void );
 void LAN_SaveServersToCache( void );
-#ifdef _HARMATTAN_PLUS
-qboolean CL_UpdateMenuVirtualButtonState(int index, qboolean pressed);
-#endif
-
 
 
 //
