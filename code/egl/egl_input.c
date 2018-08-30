@@ -169,9 +169,12 @@ static unsigned karinHandleVKBAction(int action, unsigned pressed, int dx, int d
 	}
 	else if(r == Button_Data)
 	{
-		if(pressed && dx != 0 && dy != 0)
+		if(pressed)
 		{
-			Com_QueueEvent(t, SE_MOUSE, karinSwipeSens(dx), karinSwipeSens(-dy), 0, NULL);
+			int fdx = karinSwipeSens(dx);
+			int fdy = karinSwipeSens(-dy);
+			if(fdx != 0 || fdy != 0)
+				Com_QueueEvent(t, SE_MOUSE, fdx, fdy, 0, NULL);
 			/*
 				 mx += dx;
 				 my -= dy;
